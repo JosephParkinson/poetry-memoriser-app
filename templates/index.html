@@ -1,40 +1,40 @@
-{% extends "base.html" %}
-{% block title %}The Poetry House{% endblock %}
-{% block content %}
+{% extends "base.html" %} {% block title %}The Poetry House{% endblock %} {%
+block content %}
 
 <div class="building-map">
-
   <div class="building-item">
     <a href="{{ url_for('interior') }}">
-<pre class="ascii-building">
-        /\
-       /  \
-      /    \
-     /______\
-     |  __  |
-     | |  | |
-     | |__| |
-     |______|
-</pre>
+      <pre class="ascii-building">
+   /\
+  /  \
+ /    \
+/______\
+|  __  |
+| |  | |
+| |__| |
+|______|
+</pre
+      >
       <p class="building-label">[ HOME ]</p>
     </a>
   </div>
 
   <div class="building-item">
     <a href="{{ url_for('library') }}">
-<pre class="ascii-building">
-   __________
-  |          |
-  |__________|
-  | || || || |
-  | || || || |
-  |__________|
-  |__|__|__|__|
-</pre>
+      <pre class="ascii-building">
+ ________________
+|                |
+|________________|
+| || |______| || |
+| || |______| || |
+| || |  __  | || |
+|____| |  | |____|
+|__|_| |  | |__|_|
+</pre
+      >
       <p class="building-label">[ LIBRARY ]</p>
     </a>
   </div>
-
 </div>
 
 {% endblock %}
