@@ -311,6 +311,58 @@ hr {
     margin: 20px 0;
 }
 
+/* ---- building map (index page) ---- */
+
+.building-map {
+    display: flex;
+    gap: 56px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+.building-item a {
+    display: block;
+    text-decoration: none;
+    color: #c8c8b0;
+}
+
+.building-item a:hover .ascii-building,
+.building-item a:hover .building-label {
+    color: #ffffff;
+}
+
+.ascii-building {
+    line-height: 1.3;
+    margin: 0;
+    display: block;
+}
+
+.building-label {
+    margin-top: 4px;
+    color: #7ec87e;
+    letter-spacing: 0.08em;
+    text-align: center;
+}
+
+/* ---- floor plan (interior page) ---- */
+
+.floor-plan {
+    line-height: 1.5;
+    color: #c8c8b0;
+    margin: 20px 0;
+}
+
+.floor-plan a {
+    color: #7ec87e;
+    text-decoration: none;
+}
+
+.floor-plan a:hover {
+    color: #ffffff;
+    text-decoration: underline;
+}
+
 /* ---- cursor blink effect (pure CSS) ---- */
 
 .cursor::after {

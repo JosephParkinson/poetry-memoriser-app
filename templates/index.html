@@ -1,28 +1,40 @@
-{% extends "base.html" %} {% block title %}Entrance Hall — The Poetry House{%
-endblock %} {% block content %}
-<div class="box">
-  <span class="box-title">ENTRANCE HALL</span>
+{% extends "base.html" %}
+{% block title %}The Poetry House{% endblock %}
+{% block content %}
 
-  <br />
+<div class="building-map">
 
-  <p>&gt; <a href="{{ url_for('library') }}">Library</a><br /></p>
+  <div class="building-item">
+    <a href="{{ url_for('interior') }}">
+<pre class="ascii-building">
+        /\
+       /  \
+      /    \
+     /______\
+     |  __  |
+     | |  | |
+     | |__| |
+     |______|
+</pre>
+      <p class="building-label">[ HOME ]</p>
+    </a>
+  </div>
 
-  <br />
+  <div class="building-item">
+    <a href="{{ url_for('library') }}">
+<pre class="ascii-building">
+   __________
+  |          |
+  |__________|
+  | || || || |
+  | || || || |
+  |__________|
+  |__|__|__|__|
+</pre>
+      <p class="building-label">[ LIBRARY ]</p>
+    </a>
+  </div>
 
-  <p>&gt; <a href="{{ url_for('study') }}">Study</a><br /></p>
-
-  <br />
-
-  <p>&gt; <a href="{{ url_for('recital') }}">Recital Room</a><br /></p>
-
-  <br />
-
-  <p>&gt; <a href="{{ url_for('archive') }}">Archive</a><br /></p>
 </div>
 
-<p class="info">
-  TIP: Start in the Library to choose a poem, then move to the Study to learn
-  it,<br />
-  and finally test yourself in the Recital Room.
-</p>
 {% endblock %}

@@ -111,6 +111,11 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/interior")
+def interior():
+    return render_template("interior.html")
+
+
 @app.route("/library")
 def library():
     return render_template("library.html", poems=POEMS)
