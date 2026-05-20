@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Recital Room: {{ poem.title }} — The Poetry House{% endblock %}
+
+{% block content %}
+
+<div class="box">
+  <span class="box-title">THE RECITAL ROOM</span>
+
+  <h2>{{ poem.title }}</h2>
+  <p class="poem-meta">by {{ poem.author }}</p>
+
+  <hr>
+
+  <p>
+    The poem is before you &mdash; but you must not look at it.<br>
+    Close your eyes, take a breath, and recite it from memory.
+  </p>
+
+  <br>
+
+  <pre class="poem-hidden">
++--------------------------------------------------+
+|                                                  |
+|   Speak the poem aloud from memory.              |
+|                                                  |
+|   When you are ready, mark your attempt below.  |
+|                                                  |
++--------------------------------------------------+
+  </pre>
+
+  <br>
+
+  <div class="controls">
+    <a href="{{ url_for('archive') }}" class="btn">
+      &#10003; I recited this successfully
+    </a>
+    <a href="{{ url_for('study', poem_id=poem.id) }}" class="btn btn-muted">
+      &lt; Return to Study
+    </a>
+  </div>
+
+</div>
+
+<p class="info">
+  Not quite there yet? Return to the Study and try the first-letters mode.
+</p>
+
+{% endblock %}

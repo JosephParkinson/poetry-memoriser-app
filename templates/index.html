@@ -1,0 +1,28 @@
+{% extends "base.html" %} {% block title %}Entrance Hall — The Poetry House{%
+endblock %} {% block content %}
+<div class="box">
+  <span class="box-title">ENTRANCE HALL</span>
+
+  <br />
+
+  <p>&gt; <a href="{{ url_for('library') }}">Library</a><br /></p>
+
+  <br />
+
+  <p>&gt; <a href="{{ url_for('study') }}">Study</a><br /></p>
+
+  <br />
+
+  <p>&gt; <a href="{{ url_for('recital') }}">Recital Room</a><br /></p>
+
+  <br />
+
+  <p>&gt; <a href="{{ url_for('archive') }}">Archive</a><br /></p>
+</div>
+
+<p class="info">
+  TIP: Start in the Library to choose a poem, then move to the Study to learn
+  it,<br />
+  and finally test yourself in the Recital Room.
+</p>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Study: {{ poem.title }} — The Poetry House{% endblock %}
+
+{% block content %}
+
+<div class="box">
+  <span class="box-title">THE STUDY</span>
+
+  <h2>{{ poem.title }}</h2>
+  <p class="poem-meta">by {{ poem.author }}</p>
+
+  <div class="controls">
+    <a href="{{ url_for('study', poem_id=poem.id) }}?mode=full"
+       class="btn {% if mode == 'full' %}btn-active{% endif %}">
+      Show Full Poem
+    </a>
+    <a href="{{ url_for('study', poem_id=poem.id) }}?mode=first_letters"
+       class="btn {% if mode == 'first_letters' %}btn-active{% endif %}">
+      First Letters Only
+    </a>
+    <a href="{{ url_for('study', poem_id=poem.id) }}?mode=hidden"
+       class="btn {% if mode == 'hidden' %}btn-active{% endif %}">
+      Hide Poem
+    </a>
+  </div>
+
+  {% if mode == 'hidden' %}
+    <div class="poem-hidden">
+      [ The poem is hidden. Can you recall it from memory? ]
+    </div>
+  {% elif mode == 'first_letters' %}
+    <pre class="poem-text">{{ display_text }}</pre>
+    <p class="info">Each word is shown as its first letter only.</p>
+  {% else %}
+    <pre class="poem-text">{{ display_text }}</pre>
+  {% endif %}
+
+  <hr>
+
+  <div class="controls">
+    <a href="{{ url_for('recital', poem_id=poem.id) }}" class="btn">
+      &gt; Enter the Recital Room
+    </a>
+    <a href="{{ url_for('library') }}" class="btn btn-muted">
+      &lt; Back to Library
+    </a>
+  </div>
+
+</div>
+
+{% endblock %}

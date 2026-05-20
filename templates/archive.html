@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Archive — The Poetry House{% endblock %}
+
+{% block content %}
+
+<div class="box">
+  <span class="box-title">THE ARCHIVE</span>
+
+  <p>Poems you have mastered and committed to memory.</p>
+
+  <hr>
+
+  {% if completed %}
+    {% for entry in completed %}
+    <div class="archive-entry">
+      <span class="archive-date">{{ entry.completed }}</span>
+      <span>
+        <strong>{{ entry.title }}</strong>
+        <span class="poem-meta">&mdash; {{ entry.author }}</span>
+      </span>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p class="info">Nothing here yet. Complete a recital to add a poem to the archive.</p>
+  {% endif %}
+
+</div>
+
+<p class="info">
+  &gt; <a href="{{ url_for('library') }}">Return to the Library</a> to choose your next poem.
+</p>
+
+{% endblock %}
