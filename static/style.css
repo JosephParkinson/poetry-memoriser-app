@@ -356,6 +356,43 @@ hr {
     letter-spacing: 0.08em;
 }
 
+/* ---- bookshelf ---- */
+
+.bookshelf-area {
+    position: relative;
+    min-height: 220px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.book {
+    position: absolute;
+    margin: 0;
+    line-height: 1.3;
+    color: #555545;
+    cursor: grab;
+    user-select: none;
+    transition: color 0.1s;
+}
+
+.book:hover {
+    color: #c8c8b0;
+}
+
+.book-active {
+    color: #7ec87e;
+}
+
+.book-active:hover {
+    color: #aadaaa;
+}
+
+.book.dragging {
+    cursor: grabbing;
+    color: #ffffff;
+    transition: none;
+}
+
 /* ---- study page ---- */
 
 .study-page {

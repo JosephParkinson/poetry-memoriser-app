@@ -93,6 +93,27 @@ ARCHIVE = [
 ]
 
 
+def make_book(title, width=18):
+    inner = width - 2
+    text_w = inner - 2
+    words = title.split()
+    lines, cur = [], ""
+    for w in words:
+        test = (cur + " " + w).strip()
+        if len(test) <= text_w:
+            cur = test
+        else:
+            if cur:
+                lines.append(cur)
+            cur = w
+    if cur:
+        lines.append(cur)
+    border = "+" + "-" * inner + "+"
+    empty  = "|" + " " * inner + "|"
+    rows   = ["|" + " " + ln.ljust(text_w) + " " + "|" for ln in lines]
+    return "\n".join([border, empty] + rows + [empty, border])
+
+
 def first_letters_only(text):
     lines = text.split("\n")
     result = []
@@ -140,7 +161,9 @@ def study(poem_id=1):
     else:
         display_text = poem["text"]
 
-    return render_template("study.html", poem=poem, mode=mode, display_text=display_text)
+    books = [{"id": p["id"], "art": make_book(p["title"])} for p in POEMS]
+    return render_template("study.html", poem=poem, mode=mode,
+                           display_text=display_text, books=books)
 
 
 @app.route("/recital")
