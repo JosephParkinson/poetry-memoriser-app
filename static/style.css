@@ -356,6 +356,23 @@ hr {
     letter-spacing: 0.08em;
 }
 
+/* ---- study page ---- */
+
+.study-page {
+    line-height: 1.7;
+    display: table;
+    margin: 20px auto;
+}
+
+.study-page a {
+    color: #7ec87e;
+    text-decoration: none;
+}
+
+.study-page a:hover {
+    color: #ffffff;
+}
+
 /* ---- floor plan (interior page) ---- */
 
 .floor-plan {
