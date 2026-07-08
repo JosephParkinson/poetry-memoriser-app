@@ -429,6 +429,95 @@ hr {
     text-decoration: underline;
 }
 
+/* ---- auth form ---- */
+
+.auth-form {
+    max-width: 360px;
+    margin: 0 auto;
+}
+
+/* ---- shelf / book lists ---- */
+
+.shelf-entry {
+    padding: 8px 0;
+    border-bottom: 1px solid #1e1e1e;
+}
+
+.shelf-entry:last-child {
+    border-bottom: none;
+}
+
+/* ---- flash messages ---- */
+
+.flash {
+    color: #c87e7e;
+    border-left: 2px solid #c87e7e;
+    padding-left: 10px;
+    margin: 8px 0 16px 0;
+    font-size: 0.9em;
+}
+
+/* ---- learning stage bar ---- */
+
+.stage-active {
+    color: #ffffff;
+    text-decoration: none;
+}
+
+/* ---- interactive fill-in-blanks / recital ---- */
+
+.poem-fill {
+    font-family: 'Courier New', Courier, monospace;
+    line-height: 2.2;
+    margin: 16px 0;
+    color: #c8c8b0;
+}
+
+/* a blank slot: text is present but invisible until revealed */
+.blank-slot {
+    display: inline-block;
+    color: transparent;
+    border-bottom: 1px solid #555545;
+    user-select: none;
+    cursor: default;
+    transition: border-bottom-color 0.1s;
+}
+
+/* currently-active blank: white underline with slow blink */
+.blank-slot.active {
+    border-bottom-color: #ffffff;
+    animation: blank-pulse 0.9s step-end infinite;
+}
+
+/* correctly guessed: word appears in green */
+.blank-slot.filled {
+    color: #7ec87e;
+    border-bottom-color: transparent;
+    animation: none;
+}
+
+/* auto-revealed after 3 wrong tries: shown in amber (given, not recalled) */
+.blank-slot.revealed {
+    color: #b58a3c;
+    border-bottom-color: transparent;
+    animation: none;
+}
+
+/* wrong key: underline flashes white then fades back */
+.blank-slot.flash-wrong {
+    animation: flash-wrong 0.28s ease-out forwards;
+}
+
+@keyframes blank-pulse {
+    0%, 100% { border-bottom-color: #ffffff; }
+    50%       { border-bottom-color: #333322; }
+}
+
+@keyframes flash-wrong {
+    0%   { border-bottom-color: #ffffff; }
+    100% { border-bottom-color: #555545; }
+}
+
 /* ---- cursor blink effect (pure CSS) ---- */
 
 .cursor::after {

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Bookshelf — The Poetry House{% endblock %}
+{% block content %}
+
+{% if books %}
+<div class="bookshelf-area">
+  {% for book in books %}
+  <pre class="book"
+       data-href="{{ url_for('home_book', book_id=book.id) }}"
+       style="left: {{ loop.index0 * 210 + 10 }}px; top: 20px;">{{ book_arts[book.id] }}</pre>
+  {% endfor %}
+</div>
+{% else %}
+<p class="info">your shelf is empty. <a href="{{ url_for('library') }}">visit the library</a> to check out books.</p>
+{% endif %}
+
+<p><a href="{{ url_for('interior') }}">&lt; back to home</a></p>
+
+<script>
+document.querySelectorAll('.book').forEach(function(book) {
+  var dragging = false, startX, startY, offsetX, offsetY;
+  book.addEventListener('mousedown', function(e) {
+    startX = e.clientX; startY = e.clientY;
+    var r = book.getBoundingClientRect();
+    var c = book.parentElement.getBoundingClientRect();
+    offsetX = e.clientX - r.left;
+    offsetY = e.clientY - r.top;
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+    e.preventDefault();
+  });
+  function move(e) {
+    if (!dragging && (Math.abs(e.clientX-startX)>4 || Math.abs(e.clientY-startY)>4)) {
+      dragging = true;
+      book.classList.add('dragging');
+      book.style.zIndex = 100;
+    }
+    if (dragging) {
+      var c = book.parentElement.getBoundingClientRect();
+      book.style.left = (e.clientX - c.left - offsetX) + 'px';
+      book.style.top  = (e.clientY - c.top  - offsetY) + 'px';
+    }
+  }
+  function up() {
+    if (!dragging) window.location.href = book.dataset.href;
+    dragging = false;
+    book.classList.remove('dragging');
+    book.style.zIndex = '';
+    document.removeEventListener('mousemove', move);
+    document.removeEventListener('mouseup', up);
+  }
+});
+</script>
+{% endblock %}

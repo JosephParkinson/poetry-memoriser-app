@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Register — The Poetry House{% endblock %}
+{% block content %}
+<pre class="floor-plan">+-------------------------------+
+|                               |
+|  REGISTER                     |
+|                               |
++-------------------------------+</pre>
+
+<form method="POST" class="auth-form">
+  <div class="form-group">
+    <label for="username">choose a username</label>
+    <input type="text" id="username" name="username" autocomplete="username" autofocus>
+  </div>
+  <div class="form-group">
+    <label for="password">choose a password</label>
+    <input type="password" id="password" name="password" autocomplete="new-password">
+  </div>
+  <button type="submit" class="btn">create account</button>
+  <span class="info">  have an account? <a href="{{ url_for('login') }}">login</a></span>
+</form>
+{% endblock %}

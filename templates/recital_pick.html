@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Recital Room — The Poetry House{% endblock %}
+{% block content %}
+<pre class="floor-plan">RECITAL ROOM
+============</pre>
+
+{% if entries %}
+<p class="info">choose a poem to recite:</p>
+<br>
+{% for e in entries %}
+<div class="shelf-entry">
+  <a href="{{ url_for('recital', poem_id=e.id) }}">{{ e.title }}</a>
+  {% if e.author_name %}<span class="info"> — {{ e.author_name }}</span>{% endif %}
+  <span class="info">  [{{ e.status }}]</span>
+</div>
+{% endfor %}
+{% else %}
+<p class="info">no poems ready to recite yet.</p>
+<p class="info">work through the learning stages in your <a href="{{ url_for('notebook') }}">notebook</a> first.</p>
+{% endif %}
+
+<p><br><a href="{{ url_for('interior') }}">&lt; back to home</a></p>
+{% endblock %}

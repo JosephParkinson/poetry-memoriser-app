@@ -3,25 +3,41 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block title %}Poetry{% endblock %}</title>
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='style.css') }}"
-    />
+    <title>{% block title %}The Poetry House{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
   </head>
   <body>
     <div class="container">
       <header class="site-header">
         <pre>
- ____           _ 
+ ____           _
 |  _ \ ___  ___| |_ _ __  _   _
 | |_) / _ \/ _ \ __| '__|| | | |
 |  __/ (_) |  __/ |_| |  | |_| |
 |_|   \___/ \___|\__|_|   \__, |
                            |__/
-</pre
-        >
+</pre>
       </header>
+
+      <nav class="nav">
+        <a href="{{ url_for('index') }}">home</a>
+        <a href="{{ url_for('library') }}">library</a>
+        {% if session.user_id %}
+        <a href="{{ url_for('interior') }}">my house</a>
+        <a href="{{ url_for('notebook') }}">notebook</a>
+        <a href="{{ url_for('archive') }}">archive</a>
+        <a href="{{ url_for('logout') }}">logout [{{ session.username }}]</a>
+        {% else %}
+        <a href="{{ url_for('login') }}">login</a>
+        <a href="{{ url_for('register') }}">register</a>
+        {% endif %}
+      </nav>
+
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <p class="flash">{{ messages[0] }}</p>
+        {% endif %}
+      {% endwith %}
 
       <main>{% block content %}{% endblock %}</main>
     </div>

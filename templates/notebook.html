@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Notebook — The Poetry House{% endblock %}
+{% block content %}
+<pre class="floor-plan">NOTEBOOK
+========</pre>
+
+{% if entries %}
+{% for e in entries %}
+<div class="shelf-entry">
+  <a href="{{ url_for('notebook_poem', poem_id=e.id) }}">{{ e.title }}</a>
+  {% if e.author_name %}<span class="info"> — {{ e.author_name }}</span>{% endif %}
+  <span class="info">  [{{ e.status }}{% if e.current_learning_mode %} / {{ e.current_learning_mode }}{% endif %}]</span>
+  <a href="{{ url_for('learn', poem_id=e.id) }}" class="btn btn-muted" style="margin-left:12px">learn</a>
+  {% if e.status in ('learning', 'completed') %}
+  <a href="{{ url_for('recital', poem_id=e.id) }}" class="btn btn-muted">recite</a>
+  {% endif %}
+</div>
+{% endfor %}
+{% else %}
+<p class="info">your notebook is empty.</p>
+<p class="info">browse a book on <a href="{{ url_for('home_shelf') }}">your shelf</a> and copy poems here.</p>
+{% endif %}
+
+<p><br>
+  <a href="{{ url_for('add_poem') }}" class="btn">+ add your own poem</a>
+  &nbsp;&nbsp;
+  <a href="{{ url_for('interior') }}">&lt; back to home</a>
+</p>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ book.title }} — Your Shelf{% endblock %}
+{% block content %}
+<pre class="floor-plan">{{ book.title }}
+{% if book.author_name %}by {{ book.author_name }}
+{% endif %}----------------------------------------</pre>
+
+{% for poem in poems %}
+<div class="shelf-entry">
+  <span>{{ loop.index }}. {{ poem.title }}</span>
+  {% if poem.author_name %}<span class="info"> — {{ poem.author_name }}</span>{% endif %}
+  <form method="POST" action="{{ url_for('copy_to_notebook', poem_id=poem.id) }}"
+        style="display:inline; margin-left:12px;">
+    <input type="hidden" name="next" value="{{ url_for('home_book', book_id=book.id) }}">
+    <button type="submit" class="btn btn-muted">copy to notebook</button>
+  </form>
+</div>
+{% else %}
+<p class="info">no poems in this book.</p>
+{% endfor %}
+
+<p><br><a href="{{ url_for('home_shelf') }}">&lt; back to shelf</a></p>
+{% endblock %}

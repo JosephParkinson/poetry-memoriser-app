@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}{{ book.title }} — Library{% endblock %}
+{% block content %}
+<pre class="floor-plan">+------------------------------------------+
+|  {{ (book.title)[:40]|ljust(40) }}  |
+|  {% if book.author_name %}by {{ book.author_name[:36]|ljust(36) }}{% else %}{{ ' ' * 40 }}{% endif %}  |
++------------------------------------------+</pre>
+
+{% if book.description %}
+<p class="info">{{ book.description }}</p>
+{% endif %}
+
+{% if poems %}
+<p>poems in this collection:</p>
+<br>
+{% for poem in poems %}
+<div class="shelf-entry">
+  <span class="info">{{ loop.index }}.</span>
+  {{ poem.title }}{% if poem.author_name %} <span class="info">— {{ poem.author_name }}</span>{% endif %}
+</div>
+{% endfor %}
+{% else %}
+<p class="info">no poems in this book yet.</p>
+{% endif %}
+
+<br>
+{% if session.user_id %}
+  {% if checked_out %}
+    <p class="info">already on your shelf.</p>
+  {% else %}
+    <form method="POST" action="{{ url_for('checkout', book_id=book.id) }}" style="display:inline">
+      <button type="submit" class="btn">check out</button>
+    </form>
+  {% endif %}
+{% else %}
+  <p class="info"><a href="{{ url_for('login') }}">login</a> to check out this book.</p>
+{% endif %}
+
+<p><br><a href="{{ url_for('library_shelf', period=book.period|lower) }}">&lt; back to shelf</a></p>
+{% endblock %}

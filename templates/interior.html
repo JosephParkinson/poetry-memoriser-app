@@ -1,16 +1,17 @@
-{% extends "base.html" %} {% block title %}Home Interior — The Poetry House{%
-endblock %} {% block content %}
+{% extends "base.html" %}
+{% block title %}Home Interior — The Poetry House{% endblock %}
+{% block content %}
 <pre class="floor-plan">+--------------------------------------+
 |                                      |
 |  +-----------+    +------------+     |
 |  |           |    |            |     |
-|  | <a href="{{ url_for('library') }}">BOOKSHELF</a> |    |   <a href="{{ url_for('study') }}">STUDY</a>    |     |
+|  | <a href="{{ url_for('home_shelf') }}">BOOKSHELF</a>  |    |   <a href="{{ url_for('notebook') }}">STUDY</a>      |     |
 |  |           |    |            |     |
 |  +-----------+    +------------+     |
 |                                      |
 |         +------------------+         |
 |         |                  |         |
-|         |   <a href="{{ url_for('recital') }}">RECITAL ROOM</a>   |         |
+|         |   <a href="{{ url_for('recital_pick') }}">RECITAL ROOM</a>   |         |
 |         |                  |         |
 |         +------------------+         |
 |                                      |

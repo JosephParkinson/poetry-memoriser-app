@@ -1,54 +1,26 @@
 {% extends "base.html" %}
-
 {% block title %}Library — The Poetry House{% endblock %}
-
 {% block content %}
-
-<div class="box">
-  <span class="box-title">THE LIBRARY</span>
-
-  <p>A collection of verse awaiting your attention.</p>
-
-  <hr>
-
-  {% for poem in poems %}
-  <div class="poem-entry">
-    <h3><a href="{{ url_for('study', poem_id=poem.id) }}">{{ poem.title }}</a></h3>
-    <p class="poem-meta">by {{ poem.author }}</p>
-    <p>
-      <a href="{{ url_for('study', poem_id=poem.id) }}" class="btn">Study</a>
-      <a href="{{ url_for('recital', poem_id=poem.id) }}" class="btn btn-muted">Recite</a>
-    </p>
-  </div>
-  {% endfor %}
-
-</div>
-
-<div class="box">
-  <span class="box-title">ADD A POEM</span>
-
-  <p class="info">Note: this form does not save yet &mdash; database coming soon.</p>
-
-  <form method="POST" action="{{ url_for('add_poem') }}">
-
-    <div class="form-group">
-      <label for="title">Title</label>
-      <input type="text" id="title" name="title" placeholder="e.g. Kubla Khan" required>
-    </div>
-
-    <div class="form-group">
-      <label for="author">Author</label>
-      <input type="text" id="author" name="author" placeholder="e.g. Samuel Taylor Coleridge" required>
-    </div>
-
-    <div class="form-group">
-      <label for="poem_text">Poem Text</label>
-      <textarea id="poem_text" name="poem_text" placeholder="Paste the poem here..."></textarea>
-    </div>
-
-    <button type="submit" class="btn">Add to Collection</button>
-
-  </form>
-</div>
-
+<pre class="floor-plan">+--------------------------------------------------+
+|                  THE LIBRARY                     |
+|                                                  |
+|  +--------------------+  +--------------------+ |
+|  |                    |  |                    | |
+|  |   <a href="{{ url_for('library_shelf', period='romantics') }}">[ROMANTICS]</a>      |  |    <a href="{{ url_for('library_shelf', period='modernism') }}">[MODERNISM]</a>     | |
+|  |                    |  |                    | |
+|  +--------------------+  +--------------------+ |
+|                                                  |
+|  +--------------------+  +--------------------+ |
+|  |                    |  |                    | |
+|  |   <a href="{{ url_for('library_shelf', period='victorian') }}">[VICTORIAN]</a>      |  |     <a href="{{ url_for('library_shelf', period='ancient') }}">[ANCIENT]</a>      | |
+|  |                    |  |                    | |
+|  +--------------------+  +--------------------+ |
+|                                                  |
+|  +--------------------+  +--------------------+ |
+|  |                    |  |                    | |
+|  | <a href="{{ url_for('library_shelf', period='contemporary') }}">[CONTEMPORARY]</a>    |  |  <a href="{{ url_for('library_shelf', period='renaissance') }}">[RENAISSANCE]</a>     | |
+|  |                    |  |                    | |
+|  +--------------------+  +--------------------+ |
+|                                                  |
++--------------------------------------------------+</pre>
 {% endblock %}

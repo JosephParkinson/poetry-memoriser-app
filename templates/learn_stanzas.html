@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Stanza by stanza: {{ poem.title }}{% endblock %}
+{% block content %}
+
+<pre class="study-page">STANZA BY STANZA
+================
+{{ poem.title }}{% if poem.author_name %}  —  {{ poem.author_name }}{% endif %}
+
+learn one stanza at a time.
+a stanza counts as learned once you recite it in full.
+
+  [{{ bar }}]  {{ learned_count }} / {{ total }} stanzas learned</pre>
+
+{% if just_learned is not none %}
+<p class="success-msg">stanza {{ steps[just_learned].label }} learned.</p>
+{% endif %}
+
+<div class="stanza-list">
+{% for s in steps %}
+<div class="shelf-entry">
+  <a href="{{ url_for('learn_stanza', poem_id=poem.id, idx=s.index) }}">{% if s.learned %}[x]{% elif s.index == next_index %}[&gt;]{% else %}[ ]{% endif %} {{ s.label }}.</a>
+  <span class="info">{{ s.preview[:44] }}{% if s.preview|length > 44 %}...{% endif %}</span>
+  {% if s.learned %}
+  <a href="{{ url_for('learn_stanza', poem_id=poem.id, idx=s.index) }}" class="btn btn-muted" style="margin-left:8px">revisit</a>
+  {% else %}
+  <a href="{{ url_for('learn_stanza', poem_id=poem.id, idx=s.index) }}" class="btn btn-muted" style="margin-left:8px">learn</a>
+  {% endif %}
+</div>
+{% endfor %}
+</div>
+
+<p style="margin-top:24px">
+{% if next_index is not none %}
+  <a href="{{ url_for('learn_stanza', poem_id=poem.id, idx=next_index) }}" class="btn">&gt; next: stanza {{ steps[next_index].label }}</a>
+{% else %}
+  <span class="success-msg">all stanzas learned.</span><br><br>
+  <a href="{{ url_for('recital', poem_id=poem.id) }}" class="btn">&gt; recite the whole poem</a>
+{% endif %}
+</p>
+
+<p style="margin-top:32px">
+  <a href="{{ url_for('learn', poem_id=poem.id, mode='reading') }}">&lt; whole-poem stages</a>
+  &nbsp;&nbsp;
+  <a href="{{ url_for('notebook') }}">&lt; notebook</a>
+</p>
+{% endblock %}

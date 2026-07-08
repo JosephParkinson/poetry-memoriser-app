@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ poem.title }} — Notebook{% endblock %}
+{% block content %}
+<pre class="study-page">{{ poem.title }}
+{% if poem.author_name %}by {{ poem.author_name }}
+{% endif %}----------------------------------------
+
+{{ poem.body }}</pre>
+
+<div style="margin-top:24px">
+  <p class="info">notes:</p>
+  <form method="POST">
+    <div class="form-group">
+      <textarea name="notes" rows="6">{{ entry.notes or '' }}</textarea>
+    </div>
+    <button type="submit" class="btn">save notes</button>
+  </form>
+</div>
+
+<br>
+<a href="{{ url_for('learn', poem_id=poem.id) }}" class="btn">&gt; begin learning</a>
+&nbsp;&nbsp;
+<a href="{{ url_for('learn_stanzas', poem_id=poem.id) }}" class="btn">&gt; stanza by stanza</a>
+<p><br><a href="{{ url_for('notebook') }}">&lt; back to notebook</a></p>
+{% endblock %}

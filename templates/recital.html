@@ -1,49 +1,72 @@
 {% extends "base.html" %}
-
-{% block title %}Recital Room: {{ poem.title }} — The Poetry House{% endblock %}
-
+{% block title %}Recital: {{ poem.title }}{% endblock %}
 {% block content %}
 
-<div class="box">
-  <span class="box-title">THE RECITAL ROOM</span>
+<pre class="study-page">{{ poem.title }}{% if poem.author_name %}  —  {{ poem.author_name }}{% endif %}
 
-  <h2>{{ poem.title }}</h2>
-  <p class="poem-meta">by {{ poem.author }}</p>
+type the first letter of each word. no clicking needed.
+correct → word appears.  wrong → underline flashes.
+</pre>
 
-  <hr>
-
-  <p>
-    The poem is before you &mdash; but you must not look at it.<br>
-    Close your eyes, take a breath, and recite it from memory.
-  </p>
-
-  <br>
-
-  <pre class="poem-hidden">
-+--------------------------------------------------+
-|                                                  |
-|   Speak the poem aloud from memory.              |
-|                                                  |
-|   When you are ready, mark your attempt below.  |
-|                                                  |
-+--------------------------------------------------+
-  </pre>
-
-  <br>
-
-  <div class="controls">
-    <a href="{{ url_for('archive') }}" class="btn">
-      &#10003; I recited this successfully
-    </a>
-    <a href="{{ url_for('study', poem_id=poem.id) }}" class="btn btn-muted">
-      &lt; Return to Study
-    </a>
-  </div>
-
+<div class="poem-fill" id="poem-fill">
+{%- for tok in tokens -%}
+{%- if tok.type == 'space' -%}{{ ' ' }}{%- elif tok.type == 'newline' -%}<br>{%- elif tok.type == 'blank' -%}<span class="blank-slot" data-word="{{ tok.word }}">{{ tok.word }}</span>{%- endif -%}
+{%- endfor -%}
 </div>
 
-<p class="info">
-  Not quite there yet? Return to the Study and try the first-letters mode.
+<form id="done-form" method="POST" style="margin-top:24px; display:none">
+  <button type="submit" class="btn" id="done-btn">&gt; recital complete</button>
+</form>
+
+<p style="margin-top:32px">
+  <a href="{{ url_for('learn', poem_id=poem.id) }}">&lt; back to study</a>
 </p>
 
+<script>
+(function() {
+  var blanks = Array.from(document.querySelectorAll('.blank-slot'));
+  var cur = 0;
+
+  function firstAlpha(word) {
+    var m = word.match(/[a-zA-Z]/);
+    return m ? m[0].toLowerCase() : null;
+  }
+
+  function activate(idx) {
+    blanks.forEach(function(b) { b.classList.remove('active'); });
+    if (idx < blanks.length) {
+      blanks[idx].classList.add('active');
+      blanks[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+      document.getElementById('done-form').style.display = 'block';
+      document.getElementById('done-btn').focus();
+    }
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key.length !== 1) return;
+    if (cur >= blanks.length) return;
+
+    var blank = blanks[cur];
+    var expected = firstAlpha(blank.dataset.word);
+    if (!expected) { cur++; activate(cur); return; }
+
+    if (e.key.toLowerCase() === expected) {
+      blank.classList.remove('active', 'flash-wrong');
+      blank.classList.add('filled');
+      cur++;
+      activate(cur);
+    } else {
+      blank.classList.remove('flash-wrong');
+      void blank.offsetWidth;
+      blank.classList.add('flash-wrong');
+      setTimeout(function() { blank.classList.remove('flash-wrong'); }, 300);
+    }
+    e.preventDefault();
+  });
+
+  activate(0);
+})();
+</script>
 {% endblock %}
