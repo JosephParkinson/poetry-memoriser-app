@@ -1,29 +1,38 @@
 {% extends "base.html" %}
 {% block title %}Notebook — The Poetry House{% endblock %}
 {% block content %}
-<pre class="floor-plan">NOTEBOOK
-========</pre>
+
+<h2>Notebook</h2>
 
 {% if entries %}
-{% for e in entries %}
-<div class="shelf-entry">
-  <a href="{{ url_for('notebook_poem', poem_id=e.id) }}">{{ e.title }}</a>
-  {% if e.author_name %}<span class="info"> — {{ e.author_name }}</span>{% endif %}
-  <span class="info">  [{{ e.status }}{% if e.current_learning_mode %} / {{ e.current_learning_mode }}{% endif %}]</span>
-  <a href="{{ url_for('learn', poem_id=e.id) }}" class="btn btn-muted" style="margin-left:12px">learn</a>
-  {% if e.status in ('learning', 'completed') %}
-  <a href="{{ url_for('recital', poem_id=e.id) }}" class="btn btn-muted">recite</a>
-  {% endif %}
-</div>
-{% endfor %}
+<table>
+  <tr>
+    <th>Poem</th>
+    <th>Author</th>
+    <th>Status</th>
+    <th></th>
+  </tr>
+  {% for e in entries %}
+  <tr>
+    <td><a href="{{ url_for('notebook_poem', poem_id=e.id) }}">{{ e.title }}</a></td>
+    <td>{{ e.author_name or '' }}</td>
+    <td>{% if e.status == 'notebook' %}not started{% else %}{{ e.status }}{% endif %}{% if e.current_learning_mode %} ({{ stage_labels.get(e.current_learning_mode, e.current_learning_mode) }}){% endif %}</td>
+    <td>
+      <a href="{{ url_for('learn', poem_id=e.id) }}">Learn</a>
+      {% if e.status in ('learning', 'completed') %}
+      | <a href="{{ url_for('recital', poem_id=e.id) }}">Recite</a>
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
 {% else %}
-<p class="info">your notebook is empty.</p>
-<p class="info">browse a book on <a href="{{ url_for('home_shelf') }}">your shelf</a> and copy poems here.</p>
+<p>Your notebook is empty. Browse a book on
+<a href="{{ url_for('home_shelf') }}">your shelf</a> and copy poems here.</p>
 {% endif %}
 
-<p><br>
-  <a href="{{ url_for('add_poem') }}" class="btn">+ add your own poem</a>
-  &nbsp;&nbsp;
-  <a href="{{ url_for('interior') }}">&lt; back to home</a>
-</p>
+<p><a href="{{ url_for('add_poem') }}">Add your own poem</a></p>
+
+<p><a href="{{ url_for('interior') }}">Back to my house</a></p>
+
 {% endblock %}

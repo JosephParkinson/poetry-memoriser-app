@@ -1,26 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Library — The Poetry House{% endblock %}
 {% block content %}
-<pre class="floor-plan">+--------------------------------------------------+
-|                  THE LIBRARY                     |
-|                                                  |
-|  +--------------------+  +--------------------+ |
-|  |                    |  |                    | |
-|  |   <a href="{{ url_for('library_shelf', period='romantics') }}">[ROMANTICS]</a>      |  |    <a href="{{ url_for('library_shelf', period='modernism') }}">[MODERNISM]</a>     | |
-|  |                    |  |                    | |
-|  +--------------------+  +--------------------+ |
-|                                                  |
-|  +--------------------+  +--------------------+ |
-|  |                    |  |                    | |
-|  |   <a href="{{ url_for('library_shelf', period='victorian') }}">[VICTORIAN]</a>      |  |     <a href="{{ url_for('library_shelf', period='ancient') }}">[ANCIENT]</a>      | |
-|  |                    |  |                    | |
-|  +--------------------+  +--------------------+ |
-|                                                  |
-|  +--------------------+  +--------------------+ |
-|  |                    |  |                    | |
-|  | <a href="{{ url_for('library_shelf', period='contemporary') }}">[CONTEMPORARY]</a>    |  |  <a href="{{ url_for('library_shelf', period='renaissance') }}">[RENAISSANCE]</a>     | |
-|  |                    |  |                    | |
-|  +--------------------+  +--------------------+ |
-|                                                  |
-+--------------------------------------------------+</pre>
+
+<h2>Library</h2>
+
+<p>Books are shelved by period.</p>
+
+<ul>
+  {% for label, period in shelves %}
+  <li><a href="{{ url_for('library_shelf', period=period) }}">{{ label }}</a></li>
+  {% endfor %}
+</ul>
+
 {% endblock %}

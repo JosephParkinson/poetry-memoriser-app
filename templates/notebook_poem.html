@@ -1,25 +1,23 @@
 {% extends "base.html" %}
 {% block title %}{{ poem.title }} — Notebook{% endblock %}
 {% block content %}
-<pre class="study-page">{{ poem.title }}
-{% if poem.author_name %}by {{ poem.author_name }}
-{% endif %}----------------------------------------
 
-{{ poem.body }}</pre>
+<h2>{{ poem.title }}</h2>
+{% if poem.author_name %}<p class="byline">by {{ poem.author_name }}</p>{% endif %}
 
-<div style="margin-top:24px">
-  <p class="info">notes:</p>
-  <form method="POST">
-    <div class="form-group">
-      <textarea name="notes" rows="6">{{ entry.notes or '' }}</textarea>
-    </div>
-    <button type="submit" class="btn">save notes</button>
-  </form>
-</div>
+<div class="poem">{{ poem.body }}</div>
 
-<br>
-<a href="{{ url_for('learn', poem_id=poem.id) }}" class="btn">&gt; begin learning</a>
-&nbsp;&nbsp;
-<a href="{{ url_for('learn_stanzas', poem_id=poem.id) }}" class="btn">&gt; stanza by stanza</a>
-<p><br><a href="{{ url_for('notebook') }}">&lt; back to notebook</a></p>
+<p>
+  <a href="{{ url_for('learn', poem_id=poem.id) }}">Begin learning</a> |
+  <a href="{{ url_for('learn_stanzas', poem_id=poem.id) }}">Learn stanza by stanza</a>
+</p>
+
+<h3>Notes</h3>
+<form method="POST">
+  <textarea name="notes" rows="6">{{ entry.notes or '' }}</textarea>
+  <button type="submit">Save notes</button>
+</form>
+
+<p><a href="{{ url_for('notebook') }}">Back to the notebook</a></p>
+
 {% endblock %}

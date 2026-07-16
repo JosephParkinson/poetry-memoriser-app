@@ -1,21 +1,22 @@
 {% extends "base.html" %}
 {% block title %}{{ label }} — Library{% endblock %}
 {% block content %}
-<pre class="floor-plan">SHELF: {{ label|upper }}
-{{ '=' * (7 + label|length) }}
-</pre>
+
+<h2>{{ label }}</h2>
 
 {% if books %}
+<ul>
   {% for book in books %}
-  <div class="shelf-entry">
-    <a href="{{ url_for('library_book', book_id=book.id) }}">{{ book.title }}</a>
-    {% if book.author_name %}<span class="info"> — {{ book.author_name }}</span>{% endif %}
-    <span class="info">  [{{ book.poem_count }} poem{% if book.poem_count != 1 %}s{% endif %}]</span>
-  </div>
+  <li>
+    <a href="{{ url_for('library_book', book_id=book.id) }}">{{ book.title }}</a>{% if book.author_name %} — {{ book.author_name }}{% endif %}
+    <span class="muted">({{ book.poem_count }} poem{% if book.poem_count != 1 %}s{% endif %})</span>
+  </li>
   {% endfor %}
+</ul>
 {% else %}
-  <p class="info">no books on this shelf yet.</p>
+<p>No books on this shelf yet.</p>
 {% endif %}
 
-<p><br><a href="{{ url_for('library') }}">&lt; back to library</a></p>
+<p><a href="{{ url_for('library') }}">Back to the library</a></p>
+
 {% endblock %}

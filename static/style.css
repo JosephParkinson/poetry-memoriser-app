@@ -1,531 +1,187 @@
-/* ================================================
-   THE POETRY HOUSE — terminal/text-adventure style
-   ================================================ */
-
-*, *::before, *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
+/* ==========================================
+   THE POETRY HOUSE — plain classic HTML style
+   (dark)
+   ========================================== */
 
 body {
-    background-color: #0d0d0d;
-    color: #c8c8b0;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 15px;
-    line-height: 1.7;
-    padding: 24px 16px;
+    background: #181818;
+    color: #d8d8d8;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 16px;
+    line-height: 1.5;
+    margin: 0;
+    padding: 16px;
 }
 
-.container {
-    max-width: 760px;
+.page {
+    max-width: 700px;
     margin: 0 auto;
 }
 
-/* ---- links ---- */
+/* ---- links: plain underlined, no hover styling, visited stays blue ---- */
 
-a {
-    color: #7ec87e;
-    text-decoration: none;
-}
-
-a:hover {
-    color: #ffffff;
-    text-decoration: underline;
-}
-
-a:visited {
-    color: #6aaa6a;
-}
+a:link { color: #99ccff; }
+a:visited { color: #99ccff; }
 
 /* ---- headings ---- */
 
-h1 {
-    color: #e8e8c8;
-    font-size: 1.4em;
-    letter-spacing: 0.05em;
-    margin-bottom: 4px;
+h1, h2, h3 {
+    font-weight: normal;
 }
 
 h2 {
-    color: #d0d0b0;
-    font-size: 1.1em;
-    margin-bottom: 8px;
+    font-size: 1.4em;
+    border-bottom: 1px solid #666666;
+    padding-bottom: 2px;
+    margin: 1em 0 0.5em 0;
 }
 
 h3 {
-    color: #c0c0a0;
-    font-size: 1em;
-    margin-bottom: 4px;
+    font-size: 1.15em;
+    margin: 1em 0 0.4em 0;
 }
 
 /* ---- site header ---- */
 
-.site-header {
-    margin-bottom: 28px;
+.site-title {
     text-align: center;
+    font-size: 1.9em;
+    margin: 0.2em 0 0 0;
 }
 
-.site-header pre {
-    color: #7ec87e;
-    line-height: 1.3;
-    font-size: 14px;
-    display: inline-block;
-    text-align: left;
-}
-
-/* ---- navigation ---- */
-
-.nav {
-    margin: 16px 0 28px 0;
-    padding: 8px 0;
-    border-top: 1px solid #333;
-    border-bottom: 1px solid #333;
+.site-nav {
     text-align: center;
+    margin: 0.4em 0 1em 0;
 }
 
-.nav a {
-    margin-right: 16px;
-    font-size: 0.9em;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-}
-
-.nav a::before {
-    content: '[ ';
-}
-
-.nav a::after {
-    content: ' ]';
-}
-
-.nav a:hover {
-    text-decoration: none;
-    color: #ffffff;
-}
-
-/* ---- ASCII box ---- */
-
-.box {
-    border: 1px solid #3a3a3a;
-    padding: 20px 24px;
-    margin: 20px 0;
-    position: relative;
-}
-
-.box-title {
-    position: absolute;
-    top: -10px;
-    left: 12px;
-    background: #0d0d0d;
-    padding: 0 6px;
-    font-size: 0.85em;
-    color: #888870;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+hr {
+    border: none;
+    border-top: 1px solid #666666;
+    margin: 1em 0;
 }
 
 /* ---- poem display ---- */
 
-.poem-text {
+.poem {
     white-space: pre-wrap;
-    line-height: 1.9;
-    color: #d8d8c0;
-    padding: 12px 0;
-    border-top: 1px solid #2a2a2a;
-    border-bottom: 1px solid #2a2a2a;
-    margin: 12px 0;
+    margin: 1em 0 1em 2em;
 }
 
-.poem-hidden {
-    color: #444430;
+.byline {
     font-style: italic;
-    padding: 12px 0;
-    border-top: 1px solid #2a2a2a;
-    border-bottom: 1px solid #2a2a2a;
-    margin: 12px 0;
+    margin: 0 0 1em 0;
 }
 
-.poem-meta {
-    color: #888870;
-    font-size: 0.9em;
-    margin-bottom: 12px;
+.muted {
+    color: #999999;
 }
 
-/* ---- poem list item ---- */
+/* ---- tables ---- */
 
-.poem-entry {
-    border-bottom: 1px solid #222;
-    padding: 12px 0;
+table {
+    border-collapse: collapse;
+    margin: 1em 0;
 }
 
-.poem-entry:last-child {
-    border-bottom: none;
+th, td {
+    border: 1px solid #666666;
+    padding: 3px 10px;
+    text-align: left;
+    vertical-align: baseline;
 }
 
-/* ---- mode controls ---- */
-
-.controls {
-    margin: 16px 0;
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    align-items: center;
-}
-
-/* ---- buttons / action links ---- */
-
-.btn {
-    display: inline-block;
-    border: 1px solid #5a7a5a;
-    color: #7ec87e;
-    padding: 4px 14px;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 0.9em;
-    text-decoration: none;
-    cursor: pointer;
-    background: transparent;
-    letter-spacing: 0.03em;
-}
-
-.btn:hover {
-    background: #7ec87e;
-    color: #0d0d0d;
-    text-decoration: none;
-}
-
-.btn:visited {
-    color: #7ec87e;
-}
-
-.btn-active {
-    background: #3a5a3a;
-    color: #aadaaa;
-    border-color: #7ec87e;
-}
-
-.btn-muted {
-    border-color: #444;
-    color: #888;
-}
-
-.btn-muted:hover {
-    background: #444;
-    color: #ccc;
-}
-
-.btn-danger {
-    border-color: #7a4a4a;
-    color: #c87e7e;
-}
-
-.btn-danger:hover {
-    background: #c87e7e;
-    color: #0d0d0d;
+th {
+    background: #2a2a2a;
+    font-weight: bold;
 }
 
 /* ---- forms ---- */
 
-.form-group {
-    margin: 14px 0;
-}
-
-.form-group label {
+label {
     display: block;
-    margin-bottom: 4px;
-    color: #888870;
-    font-size: 0.9em;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+    margin: 0.8em 0 0.1em 0;
 }
 
-.form-group input,
-.form-group textarea {
+input[type="text"],
+input[type="password"],
+textarea {
+    font-family: inherit;
+    font-size: 1em;
+    color: #d8d8d8;
+    background: #111111;
+    border: 1px solid #777777;
+    border-radius: 0;
+    padding: 2px 4px;
     width: 100%;
-    background: #111;
-    color: #c8c8b0;
-    border: 1px solid #3a3a3a;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 0.95em;
-    padding: 6px 10px;
-    outline: none;
+    max-width: 30em;
+    box-sizing: border-box;
 }
 
-.form-group input:focus,
-.form-group textarea:focus {
-    border-color: #7ec87e;
+textarea {
+    max-width: 40em;
+    display: block;
 }
 
-.form-group textarea {
-    resize: vertical;
-    min-height: 140px;
+button {
+    font-family: inherit;
+    font-size: 1em;
+    color: #d8d8d8;
+    background: #333333;
+    border: 2px outset #555555;
+    border-radius: 0;
+    padding: 1px 12px;
+    margin: 0.5em 0;
 }
 
-/* ---- status / info messages ---- */
-
-.info {
-    color: #888870;
-    font-size: 0.9em;
-    font-style: italic;
-    margin: 8px 0;
+button:active {
+    border-style: inset;
 }
 
-.success-msg {
-    color: #7ec87e;
-    border-left: 2px solid #7ec87e;
-    padding-left: 10px;
-    margin: 12px 0;
-}
-
-/* ---- archive list ---- */
-
-.archive-entry {
-    padding: 10px 0;
-    border-bottom: 1px solid #1e1e1e;
-    display: flex;
-    gap: 16px;
-    align-items: baseline;
-}
-
-.archive-entry:last-child {
-    border-bottom: none;
-}
-
-.archive-date {
-    color: #555545;
-    font-size: 0.85em;
-    flex-shrink: 0;
-}
-
-/* ---- footer ---- */
-
-.site-footer {
-    margin-top: 48px;
-    padding-top: 12px;
-    border-top: 1px solid #222;
-    color: #444430;
-    font-size: 0.8em;
-}
-
-/* ---- divider ---- */
-
-hr {
-    border: none;
-    border-top: 1px solid #2a2a2a;
-    margin: 20px 0;
-}
-
-/* ---- building map (index page) ---- */
-
-.building-map {
-    display: flex;
-    gap: 56px;
-    margin: 20px 0;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    justify-content: center;
-}
-
-.building-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.building-item a {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-decoration: none;
-    color: #c8c8b0;
-}
-
-.building-item a:hover .ascii-building,
-.building-item a:hover .building-label {
-    color: #ffffff;
-}
-
-.ascii-building {
-    line-height: 1.3;
-    margin: 0;
-}
-
-.building-label {
-    margin-top: 4px;
-    color: #7ec87e;
-    letter-spacing: 0.08em;
-}
-
-/* ---- bookshelf ---- */
-
-.bookshelf-area {
-    position: relative;
-    min-height: 220px;
-    margin-bottom: 32px;
-    border-bottom: 1px solid #2a2a2a;
-}
-
-.book {
-    position: absolute;
-    margin: 0;
-    line-height: 1.3;
-    color: #555545;
-    cursor: grab;
-    user-select: none;
-    transition: color 0.1s;
-}
-
-.book:hover {
-    color: #c8c8b0;
-}
-
-.book-active {
-    color: #7ec87e;
-}
-
-.book-active:hover {
-    color: #aadaaa;
-}
-
-.book.dragging {
-    cursor: grabbing;
-    color: #ffffff;
-    transition: none;
-}
-
-/* ---- study page ---- */
-
-.study-page {
-    line-height: 1.7;
-    display: table;
-    margin: 20px auto;
-}
-
-.study-page a {
-    color: #7ec87e;
-    text-decoration: none;
-}
-
-.study-page a:hover {
-    color: #ffffff;
-}
-
-/* ---- floor plan (interior page) ---- */
-
-.floor-plan {
-    line-height: 1.5;
-    color: #c8c8b0;
-    display: table;
-    margin: 20px auto;
-}
-
-.floor-plan a {
-    color: #7ec87e;
-    text-decoration: none;
-}
-
-.floor-plan a:hover {
-    color: #ffffff;
-    text-decoration: underline;
-}
-
-/* ---- auth form ---- */
-
-.auth-form {
-    max-width: 360px;
-    margin: 0 auto;
-}
-
-/* ---- shelf / book lists ---- */
-
-.shelf-entry {
-    padding: 8px 0;
-    border-bottom: 1px solid #1e1e1e;
-}
-
-.shelf-entry:last-child {
-    border-bottom: none;
-}
-
-/* ---- flash messages ---- */
+/* ---- messages ---- */
 
 .flash {
-    color: #c87e7e;
-    border-left: 2px solid #c87e7e;
-    padding-left: 10px;
-    margin: 8px 0 16px 0;
-    font-size: 0.9em;
+    color: #ff7070;
 }
 
-/* ---- learning stage bar ---- */
-
-.stage-active {
-    color: #ffffff;
-    text-decoration: none;
+.notice {
+    font-weight: bold;
 }
 
-/* ---- interactive fill-in-blanks / recital ---- */
+/* ---- fill-in-the-blanks / recital ---- */
 
 .poem-fill {
-    font-family: 'Courier New', Courier, monospace;
-    line-height: 2.2;
-    margin: 16px 0;
-    color: #c8c8b0;
+    white-space: pre-wrap;
+    line-height: 2;
+    margin: 1em 0 1em 2em;
 }
 
-/* a blank slot: text is present but invisible until revealed */
+/* a blank slot: the word is present but invisible until guessed */
 .blank-slot {
     display: inline-block;
     color: transparent;
-    border-bottom: 1px solid #555545;
+    border-bottom: 1px solid #777777;
     user-select: none;
     cursor: default;
-    transition: border-bottom-color 0.1s;
 }
 
-/* currently-active blank: white underline with slow blink */
+/* the blank the user is currently on */
 .blank-slot.active {
-    border-bottom-color: #ffffff;
-    animation: blank-pulse 0.9s step-end infinite;
+    border-bottom: 2px solid #ffffff;
 }
 
-/* correctly guessed: word appears in green */
+/* guessed correctly: word appears in plain text */
 .blank-slot.filled {
-    color: #7ec87e;
-    border-bottom-color: transparent;
-    animation: none;
+    color: #d8d8d8;
+    border-bottom: none;
 }
 
-/* auto-revealed after 3 wrong tries: shown in amber (given, not recalled) */
+/* auto-revealed after 3 wrong tries: shown in light red (given, not recalled) */
 .blank-slot.revealed {
-    color: #b58a3c;
-    border-bottom-color: transparent;
-    animation: none;
+    color: #e08080;
+    border-bottom: none;
 }
 
-/* wrong key: underline flashes white then fades back */
+/* wrong key: underline turns red briefly (no animation) */
 .blank-slot.flash-wrong {
-    animation: flash-wrong 0.28s ease-out forwards;
-}
-
-@keyframes blank-pulse {
-    0%, 100% { border-bottom-color: #ffffff; }
-    50%       { border-bottom-color: #333322; }
-}
-
-@keyframes flash-wrong {
-    0%   { border-bottom-color: #ffffff; }
-    100% { border-bottom-color: #555545; }
-}
-
-/* ---- cursor blink effect (pure CSS) ---- */
-
-.cursor::after {
-    content: '_';
-    animation: blink 1.1s step-end infinite;
-}
-
-@keyframes blink {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0; }
+    border-bottom-color: #ff5555;
 }

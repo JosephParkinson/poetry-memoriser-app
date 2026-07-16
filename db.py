@@ -288,6 +288,17 @@ def save_recital_attempt(user_id, poem_id, attempt_text, score, passed):
 FILL_PERCENTS = {"fill_10": 10, "fill_25": 25, "fill_50": 50, "fill_100": 100}
 STAGE_ORDER = ["reading", "notes", "fill_10", "fill_25", "fill_50", "fill_100"]
 
+# user-facing names for the internal stage keys
+STAGE_LABELS = {
+    "reading": "reading",
+    "notes": "notes",
+    "fill_10": "10% hidden",
+    "fill_25": "25% hidden",
+    "fill_50": "50% hidden",
+    "fill_100": "all hidden",
+    "stanzas": "stanza by stanza",
+}
+
 
 def next_stage(current):
     try:
@@ -391,18 +402,18 @@ def score_recital(attempt, body):
 # ── stanza by stanza ────────────────────────────────────────────────────────────
 
 # a stanza is learned through a gentle difficulty ramp (prepare_stanza_levels):
-# read it, then progressively more words fade until you recite it in full. the
-# fade is nested (each level blanks a superset of the last) and its order is
-# seeded by the stanza index, so every stanza fades differently.
+# read it, then progressively more words are hidden until you recite it in
+# full. the hiding is nested (each level blanks a superset of the last) and its
+# order is seeded by the stanza index, so every stanza is blanked differently.
 STANZA_LEVELS = [
     {"key": "read",   "frac": 0.0,  "label": "read it through",
-     "hint": "read the whole stanza. take your time, then start."},
+     "hint": "Read the whole stanza. Take your time, then start."},
     {"key": "some",   "frac": 0.4,  "label": "fill the gaps",
-     "hint": "type the first letter of each faded word. 3 wrong tries fills it in for you."},
-    {"key": "most",   "frac": 0.75, "label": "most of it now",
-     "hint": "more has faded — keep going."},
+     "hint": "Type the first letter of each hidden word. 3 wrong tries fills it in for you."},
+    {"key": "most",   "frac": 0.75, "label": "most words hidden",
+     "hint": "More words are hidden — keep going."},
     {"key": "recite", "frac": 1.0,  "label": "recite it all",
-     "hint": "the whole stanza, from memory."},
+     "hint": "The whole stanza, from memory."},
 ]
 
 

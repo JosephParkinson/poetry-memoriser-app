@@ -2,43 +2,46 @@
 {% block title %}Learn: {{ poem.title }}{% endblock %}
 {% block content %}
 
-<pre class="study-page">{{ poem.title }}{% if poem.author_name %}  —  {{ poem.author_name }}{% endif %}
+<h2>{{ poem.title }}</h2>
+{% if poem.author_name %}<p class="byline">by {{ poem.author_name }}</p>{% endif %}
 
-stages: {% for s in stages %}<a href="{{ url_for('learn', poem_id=poem.id, mode=s) }}"{% if s == mode %} class="stage-active"{% endif %}>[{{ s }}]</a> {% endfor %}</pre>
+<p>
+  Stages:
+  {% for s in stages %}
+    {%- if s == mode %}<b>{{ stage_labels[s] }}</b>{% else %}<a href="{{ url_for('learn', poem_id=poem.id, mode=s) }}">{{ stage_labels[s] }}</a>{% endif %}
+    {%- if not loop.last %} &middot; {% endif %}
+  {%- endfor %}
+</p>
 
-<p class="info">or <a href="{{ url_for('learn_stanzas', poem_id=poem.id) }}">learn it stanza by stanza</a>.</p>
+<p class="muted">Or learn it <a href="{{ url_for('learn_stanzas', poem_id=poem.id) }}">stanza by stanza</a>.</p>
 
 {# ── READING ── #}
 {% if mode == 'reading' %}
-<pre class="study-page">{{ poem.body }}</pre>
-<p><a href="{{ url_for('learn', poem_id=poem.id, mode='notes') }}" class="btn">&gt; next: notes</a></p>
+<div class="poem">{{ poem.body }}</div>
+<p><a href="{{ url_for('learn', poem_id=poem.id, mode='notes') }}">Next: notes</a></p>
 
 {# ── NOTES ── #}
 {% elif mode == 'notes' %}
-<pre class="study-page">{{ poem.body }}</pre>
-<div style="margin-top:16px">
-  <form method="POST" action="{{ url_for('notebook_poem', poem_id=poem.id) }}">
-    <input type="hidden" name="next" value="{{ url_for('learn', poem_id=poem.id, mode='fill_10') }}">
-    <div class="form-group">
-      <label>notes:</label>
-      <textarea name="notes" rows="5">{{ entry.notes or '' }}</textarea>
-    </div>
-    <button type="submit" class="btn">save &amp; continue</button>
-  </form>
-</div>
+<div class="poem">{{ poem.body }}</div>
+<form method="POST" action="{{ url_for('notebook_poem', poem_id=poem.id) }}">
+  <input type="hidden" name="next" value="{{ url_for('learn', poem_id=poem.id, mode='fill_10') }}">
+  <label for="notes">Notes</label>
+  <textarea id="notes" name="notes" rows="5">{{ entry.notes or '' }}</textarea>
+  <button type="submit">Save and continue</button>
+</form>
 
 {# ── FILL BLANKS ── #}
 {% elif mode in ('fill_10','fill_25','fill_50','fill_100') %}
-<p class="info">type the first letter of each highlighted word. no clicking needed.</p>
-<br>
+<p>Type the first letter of each hidden word. No clicking needed.</p>
+
 <div class="poem-fill" id="poem-fill">
 {%- for tok in tokens -%}
 {%- if tok.type == 'word' -%}{{ tok.text }}{%- elif tok.type == 'space' -%}{{ ' ' }}{%- elif tok.type == 'newline' -%}<br>{%- elif tok.type == 'blank' -%}<span class="blank-slot" data-word="{{ tok.word }}">{{ tok.word }}</span>{%- endif -%}
 {%- endfor -%}
 </div>
 
-<form id="done-form" method="POST" style="margin-top:24px; display:none">
-  <button type="submit" class="btn" id="done-btn">&gt; all done — next stage</button>
+<form id="done-form" method="POST" style="display:none">
+  <button type="submit" id="done-btn">Done — next stage</button>
 </form>
 
 <script>
@@ -55,7 +58,7 @@ stages: {% for s in stages %}<a href="{{ url_for('learn', poem_id=poem.id, mode=
     blanks.forEach(function(b) { b.classList.remove('active'); });
     if (idx < blanks.length) {
       blanks[idx].classList.add('active');
-      blanks[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      blanks[idx].scrollIntoView({ block: 'nearest' });
     } else {
       document.getElementById('done-form').style.display = 'block';
       document.getElementById('done-btn').focus();
@@ -77,10 +80,9 @@ stages: {% for s in stages %}<a href="{{ url_for('learn', poem_id=poem.id, mode=
       cur++;
       activate(cur);
     } else {
-      blank.classList.remove('flash-wrong');
-      void blank.offsetWidth;
+      clearTimeout(blank.wrongTimer);
       blank.classList.add('flash-wrong');
-      setTimeout(function() { blank.classList.remove('flash-wrong'); }, 300);
+      blank.wrongTimer = setTimeout(function() { blank.classList.remove('flash-wrong'); }, 300);
     }
     e.preventDefault();
   });
@@ -90,9 +92,9 @@ stages: {% for s in stages %}<a href="{{ url_for('learn', poem_id=poem.id, mode=
 </script>
 {% endif %}
 
-<p style="margin-top:32px">
-  <a href="{{ url_for('notebook') }}">&lt; notebook</a>
-  &nbsp;&nbsp;
-  <a href="{{ url_for('recital', poem_id=poem.id) }}">&gt; recital room</a>
+<p>
+  <a href="{{ url_for('notebook') }}">Back to the notebook</a> |
+  <a href="{{ url_for('recital', poem_id=poem.id) }}">Recital room</a>
 </p>
+
 {% endblock %}

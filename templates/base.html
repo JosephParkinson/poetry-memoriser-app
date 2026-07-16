@@ -7,31 +7,24 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
   </head>
   <body>
-    <div class="container">
-      <header class="site-header">
-        <pre>
- ____           _
-|  _ \ ___  ___| |_ _ __  _   _
-| |_) / _ \/ _ \ __| '__|| | | |
-|  __/ (_) |  __/ |_| |  | |_| |
-|_|   \___/ \___|\__|_|   \__, |
-                           |__/
-</pre>
-      </header>
+    <div class="page">
+      <h1 class="site-title">The Poetry House</h1>
 
-      <nav class="nav">
-        <a href="{{ url_for('index') }}">home</a>
-        <a href="{{ url_for('library') }}">library</a>
-        {% if session.user_id %}
-        <a href="{{ url_for('interior') }}">my house</a>
-        <a href="{{ url_for('notebook') }}">notebook</a>
-        <a href="{{ url_for('archive') }}">archive</a>
-        <a href="{{ url_for('logout') }}">logout [{{ session.username }}]</a>
-        {% else %}
-        <a href="{{ url_for('login') }}">login</a>
-        <a href="{{ url_for('register') }}">register</a>
-        {% endif %}
-      </nav>
+      <p class="site-nav">
+        <a href="{{ url_for('index') }}">Home</a> |
+        <a href="{{ url_for('library') }}">Library</a>
+        {%- if session.user_id %} |
+        <a href="{{ url_for('interior') }}">My house</a> |
+        <a href="{{ url_for('notebook') }}">Notebook</a> |
+        <a href="{{ url_for('archive') }}">Archive</a> |
+        <a href="{{ url_for('logout') }}">Log out ({{ session.username }})</a>
+        {%- else %} |
+        <a href="{{ url_for('login') }}">Log in</a> |
+        <a href="{{ url_for('register') }}">Register</a>
+        {%- endif %}
+      </p>
+
+      <hr>
 
       {% with messages = get_flashed_messages() %}
         {% if messages %}

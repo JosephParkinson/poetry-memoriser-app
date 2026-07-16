@@ -1,23 +1,24 @@
 {% extends "base.html" %}
-{% block title %}Recital Room — The Poetry House{% endblock %}
+{% block title %}Recital room — The Poetry House{% endblock %}
 {% block content %}
-<pre class="floor-plan">RECITAL ROOM
-============</pre>
+
+<h2>Recital room</h2>
 
 {% if entries %}
-<p class="info">choose a poem to recite:</p>
-<br>
-{% for e in entries %}
-<div class="shelf-entry">
-  <a href="{{ url_for('recital', poem_id=e.id) }}">{{ e.title }}</a>
-  {% if e.author_name %}<span class="info"> — {{ e.author_name }}</span>{% endif %}
-  <span class="info">  [{{ e.status }}]</span>
-</div>
-{% endfor %}
+<p>Choose a poem to recite.</p>
+<ul>
+  {% for e in entries %}
+  <li>
+    <a href="{{ url_for('recital', poem_id=e.id) }}">{{ e.title }}</a>{% if e.author_name %} — {{ e.author_name }}{% endif %}
+    <span class="muted">({{ e.status }})</span>
+  </li>
+  {% endfor %}
+</ul>
 {% else %}
-<p class="info">no poems ready to recite yet.</p>
-<p class="info">work through the learning stages in your <a href="{{ url_for('notebook') }}">notebook</a> first.</p>
+<p>No poems ready to recite yet. Work through the learning stages in your
+<a href="{{ url_for('notebook') }}">notebook</a> first.</p>
 {% endif %}
 
-<p><br><a href="{{ url_for('interior') }}">&lt; back to home</a></p>
+<p><a href="{{ url_for('interior') }}">Back to my house</a></p>
+
 {% endblock %}

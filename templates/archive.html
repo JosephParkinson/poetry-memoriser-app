@@ -1,21 +1,29 @@
 {% extends "base.html" %}
 {% block title %}Archive — The Poetry House{% endblock %}
 {% block content %}
-<pre class="floor-plan">ARCHIVE
-=======</pre>
+
+<h2>Archive</h2>
 
 {% if completed %}
-{% for entry in completed %}
-<div class="archive-entry">
-  <span class="archive-date">{{ entry.completed_at[:10] }}</span>
-  <span><strong>{{ entry.title }}</strong>
-  {% if entry.author_name %}<span class="info"> — {{ entry.author_name }}</span>{% endif %}
-  </span>
-</div>
-{% endfor %}
+<p>Poems you have recited in full.</p>
+<table>
+  <tr>
+    <th>Date</th>
+    <th>Poem</th>
+    <th>Author</th>
+  </tr>
+  {% for entry in completed %}
+  <tr>
+    <td>{{ entry.completed_at[:10] }}</td>
+    <td>{{ entry.title }}</td>
+    <td>{{ entry.author_name or '' }}</td>
+  </tr>
+  {% endfor %}
+</table>
 {% else %}
-<p class="info">nothing here yet. complete a recital to add a poem to the archive.</p>
+<p>Nothing here yet. Complete a recital to add a poem to the archive.</p>
 {% endif %}
 
-<p><br><a href="{{ url_for('interior') }}">&lt; back to home</a></p>
+<p><a href="{{ url_for('interior') }}">Back to my house</a></p>
+
 {% endblock %}

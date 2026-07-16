@@ -20,30 +20,12 @@ def login_required(f):
     return decorated
 
 
-def make_book_art(title, width=18):
-    inner = width - 2
-    text_w = inner - 2
-    words = title.split()
-    lines, cur = [], ""
-    for w in words:
-        test = (cur + " " + w).strip()
-        if len(test) <= text_w:
-            cur = test
-        else:
-            if cur:
-                lines.append(cur)
-            cur = w
-    if cur:
-        lines.append(cur)
-    border = "+" + "-" * inner + "+"
-    empty = "|" + " " * inner + "|"
-    rows = ["|" + " " + ln.ljust(text_w) + " " + "|" for ln in lines]
-    return "\n".join([border, empty] + rows + [empty, border])
-
-
-def progress_bar(done, total, width=24):
-    filled = 0 if total == 0 else round(done / total * width)
-    return "#" * filled + "-" * (width - filled)
+def safe_next(fallback):
+    """Return the form's 'next' URL only if it is a local path."""
+    nxt = request.form.get("next", "")
+    if nxt.startswith("/") and not nxt.startswith("//"):
+        return nxt
+    return fallback
 
 
 # ── auth routes ───────────────────────────────────────────────────────────────
@@ -56,7 +38,7 @@ def login():
             session["user_id"] = user["id"]
             session["username"] = user["username"]
             return redirect(url_for("index"))
-        flash("invalid username or password")
+        flash("Invalid username or password.")
     return render_template("login.html")
 
 
@@ -66,14 +48,14 @@ def register():
         username = request.form["username"].strip()
         password = request.form["password"]
         if not username or not password:
-            flash("username and password required")
+            flash("Username and password required.")
         elif db.create_user(username, password):
             user = db.verify_user(username, password)
             session["user_id"] = user["id"]
             session["username"] = user["username"]
             return redirect(url_for("index"))
         else:
-            flash("username already taken")
+            flash("Username already taken.")
     return render_template("register.html")
 
 
@@ -134,8 +116,7 @@ def checkout(book_id):
 @login_required
 def home_shelf():
     books = db.get_user_books(session["user_id"])
-    book_arts = {b["id"]: make_book_art(b["title"]) for b in books}
-    return render_template("home_shelf.html", books=books, book_arts=book_arts)
+    return render_template("home_shelf.html", books=books)
 
 
 @app.route("/poem/add", methods=["GET", "POST"])
@@ -145,7 +126,7 @@ def add_poem():
         title = request.form.get("title", "").strip()
         body = request.form.get("body", "").strip()
         if not title or not body:
-            flash("title and poem text are required")
+            flash("Title and poem text are required.")
         else:
             poem_id = db.create_poem(
                 user_id=session["user_id"],
@@ -177,8 +158,7 @@ def home_book(book_id):
 @login_required
 def copy_to_notebook(poem_id):
     db.copy_to_notebook(session["user_id"], poem_id)
-    next_url = request.form.get("next") or url_for("notebook")
-    return redirect(next_url)
+    return redirect(safe_next(url_for("notebook")))
 
 
 # ── notebook ──────────────────────────────────────────────────────────────────
@@ -187,7 +167,8 @@ def copy_to_notebook(poem_id):
 @login_required
 def notebook():
     entries = db.get_notebook(session["user_id"])
-    return render_template("notebook.html", entries=entries)
+    return render_template("notebook.html", entries=entries,
+                           stage_labels=db.STAGE_LABELS)
 
 
 @app.route("/notebook/<int:poem_id>", methods=["GET", "POST"])
@@ -199,7 +180,7 @@ def notebook_poem(poem_id):
     user_id = session["user_id"]
     if request.method == "POST":
         db.save_notes(user_id, poem_id, request.form.get("notes", ""))
-        return redirect(url_for("notebook_poem", poem_id=poem_id))
+        return redirect(safe_next(url_for("notebook_poem", poem_id=poem_id)))
     entry = db.get_notebook_entry(user_id, poem_id)
     up = db.get_user_poem(user_id, poem_id)
     return render_template("notebook_poem.html", poem=poem, entry=entry, up=up)
@@ -245,6 +226,7 @@ def learn(poem_id):
         next_mode=db.next_stage(mode),
         entry=entry,
         stages=db.STAGE_ORDER,
+        stage_labels=db.STAGE_LABELS,
     )
 
 
@@ -281,7 +263,6 @@ def learn_stanzas(poem_id):
         total=len(stanzas),
         learned_count=len(learned),
         next_index=next_index,
-        bar=progress_bar(len(learned), len(stanzas)),
         just_learned=request.args.get("learned", type=int),
     )
 
