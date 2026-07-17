@@ -18,10 +18,12 @@ body {
     margin: 0 auto;
 }
 
-/* ---- links: plain underlined, no hover styling, visited stays blue ---- */
+/* ---- links: same colour as body text, indicated by underline only ---- */
 
-a:link { color: #99ccff; }
-a:visited { color: #99ccff; }
+a:link, a:visited {
+    color: inherit;
+    text-decoration: underline;
+}
 
 /* ---- headings ---- */
 

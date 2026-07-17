@@ -9,6 +9,8 @@
   <tr>
     <th>Poem</th>
     <th>Author</th>
+    <th>Year</th>
+    <th>Lines</th>
     <th>Status</th>
     <th></th>
   </tr>
@@ -16,6 +18,8 @@
   <tr>
     <td><a href="{{ url_for('notebook_poem', poem_id=e.id) }}">{{ e.title }}</a></td>
     <td>{{ e.author_name or '' }}</td>
+    <td>{{ e.year_written or '' }}</td>
+    <td>{{ e.line_count }}</td>
     <td>{% if e.status == 'notebook' %}not started{% else %}{{ e.status }}{% endif %}{% if e.current_learning_mode %} ({{ stage_labels.get(e.current_learning_mode, e.current_learning_mode) }}){% endif %}</td>
     <td>
       <a href="{{ url_for('learn', poem_id=e.id) }}">Learn</a>

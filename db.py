@@ -179,8 +179,8 @@ def copy_to_notebook(user_id, poem_id):
 def get_notebook(user_id):
     conn = get_db()
     rows = conn.execute(
-        """SELECT p.id, p.title, p.author_name, up.status, up.current_learning_mode,
-                  ne.notes
+        """SELECT p.id, p.title, p.author_name, p.year_written, p.body,
+                  up.status, up.current_learning_mode, ne.notes
            FROM poems p
            JOIN user_poems up ON p.id = up.poem_id AND up.user_id = ?
            LEFT JOIN notebook_entries ne ON ne.poem_id = p.id AND ne.user_id = ?
@@ -189,7 +189,13 @@ def get_notebook(user_id):
         (user_id, user_id),
     ).fetchall()
     conn.close()
-    return [dict(r) for r in rows]
+    entries = []
+    for r in rows:
+        e = dict(r)
+        body = e.pop("body")
+        e["line_count"] = sum(1 for ln in body.splitlines() if ln.strip())
+        entries.append(e)
+    return entries
 
 
 def get_user_poem(user_id, poem_id):
@@ -296,7 +302,7 @@ STAGE_LABELS = {
     "fill_25": "25% hidden",
     "fill_50": "50% hidden",
     "fill_100": "all hidden",
-    "stanzas": "stanza by stanza",
+    "stanzas": "in parts",
 }
 
 
@@ -422,6 +428,37 @@ def split_stanzas(body):
     text = body.replace("\r\n", "\n").replace("\r", "\n")
     chunks = re.split(r"\n[ \t]*\n", text)
     return [c.strip("\n") for c in chunks if c.strip()]
+
+
+CHUNK_LINES = 4
+
+
+def split_chunks(body):
+    """Split a poem into learnable parts, one per stanza.
+
+    A poem with no stanza breaks (and more than CHUNK_LINES + 2 lines) is
+    split into groups of CHUNK_LINES lines instead, so long unbroken poems
+    can still be learned in pieces.
+    Returns a list of {"text", "title"} dicts.
+    """
+    stanzas = split_stanzas(body)
+    if len(stanzas) == 1:
+        lines = stanzas[0].split("\n")
+        if len(lines) > CHUNK_LINES + 2:
+            groups = [lines[i:i + CHUNK_LINES]
+                      for i in range(0, len(lines), CHUNK_LINES)]
+            # avoid a trailing one-line part
+            if len(groups[-1]) == 1:
+                groups[-2].extend(groups.pop())
+            chunks = []
+            start = 1
+            for g in groups:
+                chunks.append({"text": "\n".join(g),
+                               "title": "Lines %d–%d" % (start, start + len(g) - 1)})
+                start += len(g)
+            return chunks
+    return [{"text": s, "title": "Stanza %d" % (i + 1)}
+            for i, s in enumerate(stanzas)]
 
 
 def get_stanza_progress(user_id, poem_id):
