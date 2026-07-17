@@ -34,6 +34,10 @@
 {% elif mode in ('fill_10','fill_25','fill_50','fill_100') %}
 <p>Type the first letter of each hidden word. No clicking needed.</p>
 
+{% if mode == 'fill_100' %}
+<p><label><input type="checkbox" id="hide-underlines"> Hide underlines </label></p>
+{% endif %}
+
 <div class="poem-fill" id="poem-fill">
 {%- for tok in tokens -%}
 {%- if tok.type == 'word' -%}{{ tok.text }}{%- elif tok.type == 'space' -%}{{ ' ' }}{%- elif tok.type == 'newline' -%}<br>{%- elif tok.type == 'blank' -%}<span class="blank-slot" data-word="{{ tok.word }}">{{ tok.word }}</span>{%- endif -%}
@@ -48,6 +52,13 @@
 (function() {
   var blanks = Array.from(document.querySelectorAll('.blank-slot'));
   var cur = 0;
+
+  var hideBox = document.getElementById('hide-underlines');
+  if (hideBox) {
+    hideBox.addEventListener('change', function() {
+      document.getElementById('poem-fill').classList.toggle('no-underlines', this.checked);
+    });
+  }
 
   function firstAlpha(word) {
     var m = word.match(/[a-zA-Z]/);

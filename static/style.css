@@ -147,6 +147,11 @@ button:active {
     font-weight: bold;
 }
 
+/* recite-aloud marking: poem words that were not heard */
+.word-missed {
+    color: #ff7070;
+}
+
 /* ---- fill-in-the-blanks / recital ---- */
 
 .poem-fill {
@@ -183,5 +188,16 @@ button:active {
 
 /* wrong key: underline turns red briefly (no animation) */
 .blank-slot.flash-wrong {
+    border-bottom-color: #ff5555;
+}
+
+/* full-recital option: hide underlines so word lengths give no hint.
+   a wrong key still flashes the current word's underline red. */
+.poem-fill.no-underlines .blank-slot,
+.poem-fill.no-underlines .blank-slot.active {
+    border-bottom-color: transparent;
+}
+
+.poem-fill.no-underlines .blank-slot.flash-wrong {
     border-bottom-color: #ff5555;
 }

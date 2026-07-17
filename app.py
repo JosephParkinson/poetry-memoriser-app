@@ -325,6 +325,15 @@ def recital(poem_id):
     return render_template("recital.html", poem=poem, tokens=tokens)
 
 
+@app.route("/recital/<int:poem_id>/aloud")
+@login_required
+def recital_aloud(poem_id):
+    poem = db.get_poem(poem_id)
+    if not poem:
+        return redirect(url_for("recital_pick"))
+    return render_template("recital_aloud.html", poem=poem)
+
+
 # ── archive ───────────────────────────────────────────────────────────────────
 
 @app.route("/archive")
