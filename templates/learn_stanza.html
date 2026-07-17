@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Stanza {{ label }}: {{ poem.title }}{% endblock %}
+{% block content %}
+
+<h2>Stanza {{ label }} of {{ total }}</h2>
+<p class="byline">{{ poem.title }}{% if poem.author_name %}, by {{ poem.author_name }}{% endif %}</p>
+
+{% for lv in levels %}
+<div class="level" data-key="{{ lv.key }}"{% if not loop.first %} style="display:none"{% endif %}>
+  <p>Step {{ loop.index }} of {{ levels|length }} — {{ lv.label }}</p>
+  <p class="muted">{{ lv.hint }}</p>
+  <div class="poem-fill">
+{%- for tok in lv.tokens -%}
+{%- if tok.type == 'word' -%}{{ tok.text }}{%- elif tok.type == 'space' -%}{{ ' ' }}{%- elif tok.type == 'newline' -%}<br>{%- elif tok.type == 'blank' -%}<span class="blank-slot" data-word="{{ tok.word }}">{{ tok.word }}</span>{%- endif -%}
+{%- endfor -%}
+  </div>
+  {% if loop.first %}
+  <button type="button" id="start-btn">Start</button>
+  {% endif %}
+</div>
+{% endfor %}
+
+<form id="done-form" method="POST" style="display:none">
+  <button type="submit" id="done-btn">Stanza {{ label }} learned</button>
+</form>
+
+<p><a href="{{ url_for('learn_stanzas', poem_id=poem.id) }}">Back to the stanza list</a></p>
+
+<script>
+(function() {
+  function firstAlpha(word) {
+    var m = word.match(/[a-zA-Z]/);
+    return m ? m[0].toLowerCase() : null;
+  }
+
+  // a recite loop over the .blank-slot elements inside `container`.
+  // a blank is auto-filled (revealed) after 3 wrong keystrokes so the user
+  // never gets stuck.
+  function makeRunner(container, onDone) {
+    var blanks = Array.from(container.querySelectorAll('.blank-slot'));
+    var cur = 0;
+    var wrong = 0;
+
+    function activate(idx) {
+      blanks.forEach(function(b) { b.classList.remove('active'); });
+      if (idx < blanks.length) {
+        wrong = 0;
+        blanks[idx].classList.add('active');
+        blanks[idx].scrollIntoView({ block: 'nearest' });
+      } else {
+        onDone();
+      }
+    }
+
+    function advance() { cur++; activate(cur); }
+
+    function onKey(e) {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key.length !== 1) return;
+      if (cur >= blanks.length) return;
+
+      var blank = blanks[cur];
+      var expected = firstAlpha(blank.dataset.word);
+      if (!expected) { advance(); return; }
+
+      if (e.key.toLowerCase() === expected) {
+        blank.classList.remove('active', 'flash-wrong');
+        blank.classList.add('filled');
+        advance();
+      } else {
+        wrong++;
+        clearTimeout(blank.wrongTimer);
+        blank.classList.add('flash-wrong');
+        blank.wrongTimer = setTimeout(function() { blank.classList.remove('flash-wrong'); }, 300);
+        if (wrong >= 3) {
+          // 3 wrong tries: fill it in for them and move on.
+          blank.classList.remove('active', 'flash-wrong');
+          blank.classList.add('revealed');
+          advance();
+        }
+      }
+      e.preventDefault();
+    }
+
+    return {
+      start: function() { document.addEventListener('keydown', onKey); activate(0); },
+      stop:  function() { document.removeEventListener('keydown', onKey); }
+    };
+  }
+
+  var levels   = Array.from(document.querySelectorAll('.level'));
+  var doneForm = document.getElementById('done-form');
+  var startBtn = document.getElementById('start-btn');
+  var current  = null;
+
+  function run(i) {
+    if (current) current.stop();
+    levels.forEach(function(el, idx) { el.style.display = (idx === i) ? 'block' : 'none'; });
+    levels[i].scrollIntoView({ block: 'start' });
+    current = makeRunner(levels[i], function() {
+      if (i === levels.length - 1) {
+        if (current) current.stop();
+        doneForm.style.display = 'block';
+        document.getElementById('done-btn').focus();
+      } else {
+        run(i + 1);      // auto-advance to the next (harder) level
+      }
+    });
+    current.start();
+  }
+
+  // the first level is the read-through: show it, wait for the start button.
+  startBtn.addEventListener('click', function() { run(1); });
+})();
+</script>
+{% endblock %}

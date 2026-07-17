@@ -1,49 +1,98 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {% block title %}Recital: {{ poem.title }}{% endblock
+%} {% block content %}
 
-{% block title %}Recital Room: {{ poem.title }} — The Poetry House{% endblock %}
+<h2>Recital: {{ poem.title }}</h2>
+{% if poem.author_name %}
+<p class="byline">by {{ poem.author_name }}</p>
+{% endif %}
 
-{% block content %}
-
-<div class="box">
-  <span class="box-title">THE RECITAL ROOM</span>
-
-  <h2>{{ poem.title }}</h2>
-  <p class="poem-meta">by {{ poem.author }}</p>
-
-  <hr>
-
-  <p>
-    The poem is before you &mdash; but you must not look at it.<br>
-    Close your eyes, take a breath, and recite it from memory.
-  </p>
-
-  <br>
-
-  <pre class="poem-hidden">
-+--------------------------------------------------+
-|                                                  |
-|   Speak the poem aloud from memory.              |
-|                                                  |
-|   When you are ready, mark your attempt below.  |
-|                                                  |
-+--------------------------------------------------+
-  </pre>
-
-  <br>
-
-  <div class="controls">
-    <a href="{{ url_for('archive') }}" class="btn">
-      &#10003; I recited this successfully
-    </a>
-    <a href="{{ url_for('study', poem_id=poem.id) }}" class="btn btn-muted">
-      &lt; Return to Study
-    </a>
-  </div>
-
-</div>
-
-<p class="info">
-  Not quite there yet? Return to the Study and try the first-letters mode.
+<p>
+  <label>
+    <input type="checkbox" id="hide-underlines" /> Hide underlines
+  </label>
 </p>
 
+<p>
+  <a href="{{ url_for('recital_aloud', poem_id=poem.id) }}"
+    >Recite aloud instead</a
+  >
+</p>
+
+<div class="poem-fill" id="poem-fill">
+  {%- for tok in tokens -%} {%- if tok.type == 'space' -%}{{ ' ' }}{%- elif
+  tok.type == 'newline' -%}<br />{%- elif tok.type == 'blank' -%}<span
+    class="blank-slot"
+    data-word="{{ tok.word }}"
+    >{{ tok.word }}</span
+  >{%- endif -%} {%- endfor -%}
+</div>
+
+<form id="done-form" method="POST" style="display: none">
+  <button type="submit" id="done-btn">Recital complete</button>
+</form>
+
+<p><a href="{{ url_for('learn', poem_id=poem.id) }}">Back to learning</a></p>
+
+<script>
+  (function () {
+    var blanks = Array.from(document.querySelectorAll(".blank-slot"));
+    var cur = 0;
+
+    document
+      .getElementById("hide-underlines")
+      .addEventListener("change", function () {
+        document
+          .getElementById("poem-fill")
+          .classList.toggle("no-underlines", this.checked);
+      });
+
+    function firstAlpha(word) {
+      var m = word.match(/[a-zA-Z]/);
+      return m ? m[0].toLowerCase() : null;
+    }
+
+    function activate(idx) {
+      blanks.forEach(function (b) {
+        b.classList.remove("active");
+      });
+      if (idx < blanks.length) {
+        blanks[idx].classList.add("active");
+        blanks[idx].scrollIntoView({ block: "nearest" });
+      } else {
+        document.getElementById("done-form").style.display = "block";
+        document.getElementById("done-btn").focus();
+      }
+    }
+
+    document.addEventListener("keydown", function (e) {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key.length !== 1) return;
+      if (cur >= blanks.length) return;
+
+      var blank = blanks[cur];
+      var expected = firstAlpha(blank.dataset.word);
+      if (!expected) {
+        cur++;
+        activate(cur);
+        return;
+      }
+
+      if (e.key.toLowerCase() === expected) {
+        blank.classList.remove("active", "flash-wrong");
+        blank.classList.add("filled");
+        cur++;
+        activate(cur);
+      } else {
+        clearTimeout(blank.wrongTimer);
+        blank.classList.add("flash-wrong");
+        blank.wrongTimer = setTimeout(function () {
+          blank.classList.remove("flash-wrong");
+        }, 300);
+      }
+      e.preventDefault();
+    });
+
+    activate(0);
+  })();
+</script>
 {% endblock %}

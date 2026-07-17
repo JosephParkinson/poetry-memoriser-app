@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ label }} — Library{% endblock %}
+{% block content %}
+
+<h2>{{ label }}</h2>
+
+{% if books %}
+<ul>
+  {% for book in books %}
+  <li>
+    <a href="{{ url_for('library_book', book_id=book.id) }}">{{ book.title }}</a>{% if book.author_name %} — {{ book.author_name }}{% endif %}
+    <span class="muted">({{ book.poem_count }} poem{% if book.poem_count != 1 %}s{% endif %})</span>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p>No books on this shelf yet.</p>
+{% endif %}
+
+<p><a href="{{ url_for('library') }}">Back to the library</a></p>
+
+{% endblock %}

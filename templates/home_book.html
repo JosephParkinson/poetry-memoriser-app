@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ book.title }} — Bookshelf{% endblock %}
+{% block content %}
+
+<h2>{{ book.title }}</h2>
+{% if book.author_name %}<p class="byline">by {{ book.author_name }}</p>{% endif %}
+
+{% if poems %}
+<ol>
+  {% for poem in poems %}
+  <li>
+    {{ poem.title }}{% if poem.author_name %} <span class="muted">— {{ poem.author_name }}</span>{% endif %}
+    <form method="POST" action="{{ url_for('copy_to_notebook', poem_id=poem.id) }}" style="display:inline">
+      <input type="hidden" name="next" value="{{ url_for('home_book', book_id=book.id) }}">
+      <button type="submit">Copy to notebook</button>
+    </form>
+  </li>
+  {% endfor %}
+</ol>
+{% else %}
+<p>No poems in this book.</p>
+{% endif %}
+
+<p><a href="{{ url_for('home_shelf') }}">Back to the bookshelf</a></p>
+
+{% endblock %}

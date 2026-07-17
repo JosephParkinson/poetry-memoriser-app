@@ -1,34 +1,29 @@
 {% extends "base.html" %}
-
 {% block title %}Archive — The Poetry House{% endblock %}
-
 {% block content %}
 
-<div class="box">
-  <span class="box-title">THE ARCHIVE</span>
+<h2>Archive</h2>
 
-  <p>Poems you have mastered and committed to memory.</p>
+{% if completed %}
+<p>Poems you have recited in full.</p>
+<table>
+  <tr>
+    <th>Date</th>
+    <th>Poem</th>
+    <th>Author</th>
+  </tr>
+  {% for entry in completed %}
+  <tr>
+    <td>{{ entry.completed_at[:10] }}</td>
+    <td>{{ entry.title }}</td>
+    <td>{{ entry.author_name or '' }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>Nothing here yet. Complete a recital to add a poem to the archive.</p>
+{% endif %}
 
-  <hr>
-
-  {% if completed %}
-    {% for entry in completed %}
-    <div class="archive-entry">
-      <span class="archive-date">{{ entry.completed }}</span>
-      <span>
-        <strong>{{ entry.title }}</strong>
-        <span class="poem-meta">&mdash; {{ entry.author }}</span>
-      </span>
-    </div>
-    {% endfor %}
-  {% else %}
-    <p class="info">Nothing here yet. Complete a recital to add a poem to the archive.</p>
-  {% endif %}
-
-</div>
-
-<p class="info">
-  &gt; <a href="{{ url_for('library') }}">Return to the Library</a> to choose your next poem.
-</p>
+<p><a href="{{ url_for('interior') }}">Back to my house</a></p>
 
 {% endblock %}

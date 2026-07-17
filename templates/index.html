@@ -1,40 +1,18 @@
-{% extends "base.html" %} {% block title %}The Poetry House{% endblock %} {%
-block content %}
+{% extends "base.html" %}
+{% block title %}The Poetry House{% endblock %}
+{% block content %}
 
-<div class="building-map">
-  <div class="building-item">
-    <a href="{{ url_for('interior') }}">
-      <pre class="ascii-building">
-   /\
-  /  \
- /    \
-/______\
-|  __  |
-| |  | |
-| |__| |
-|______|
-</pre
-      >
-      <p class="building-label">[ HOME ]</p>
-    </a>
-  </div>
+<p>A tool for memorising poems. Check out books from the library, copy poems
+into your notebook, and learn them stage by stage until you can recite them
+from memory.</p>
 
-  <div class="building-item">
-    <a href="{{ url_for('library') }}">
-      <pre class="ascii-building">
- ________________
-|                |
-|________________|
-| || |______| || |
-| || |______| || |
-| || |  __  | || |
-|____| |  | |____|
-|__|_| |  | |__|_|
-</pre
-      >
-      <p class="building-label">[ LIBRARY ]</p>
-    </a>
-  </div>
-</div>
+<ul>
+  <li><a href="{{ url_for('library') }}">Library</a> — browse books by period and check them out.</li>
+  {% if session.user_id %}
+  <li><a href="{{ url_for('interior') }}">My house</a> — your bookshelf, notebook, and recital room.</li>
+  {% else %}
+  <li><a href="{{ url_for('login') }}">Log in</a> or <a href="{{ url_for('register') }}">register</a> to start learning poems.</li>
+  {% endif %}
+</ul>
 
 {% endblock %}

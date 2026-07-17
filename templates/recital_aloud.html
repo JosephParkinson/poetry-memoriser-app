@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Recite aloud: {{ poem.title }}{% endblock %}
+{% block content %}
+
+<h2>Recite aloud: {{ poem.title }}</h2>
+{% if poem.author_name %}
+<p class="byline">by {{ poem.author_name }}</p>
+{% endif %}
+
+<p>Press Start and recite the poem aloud. Press Stop when you have finished;
+your recitation is then marked against the text.</p>
+
+<p>
+  <button type="button" id="start-btn">Start</button>
+  <button type="button" id="stop-btn" disabled>Stop</button>
+</p>
+
+<p id="status" class="muted"></p>
+
+<div id="result" style="display:none">
+  <p id="score" class="notice"></p>
+  <p>Missed words are shown in red.</p>
+  <div class="poem" id="marked-poem">
+{%- for line in poem.body.split('\n') -%}
+{%- for w in line.split() -%}<span class="say-word">{{ w }}</span>{{ ' ' }}{%- endfor -%}<br>
+{%- endfor -%}
+  </div>
+  <p class="muted">What was heard:</p>
+  <p class="muted" id="transcript"></p>
+</div>
+
+<p><a href="{{ url_for('recital', poem_id=poem.id) }}">Back to the recital</a></p>
+
+<script>
+(function() {
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var startBtn = document.getElementById('start-btn');
+  var stopBtn = document.getElementById('stop-btn');
+  var status = document.getElementById('status');
+
+  if (!SR) {
+    startBtn.disabled = true;
+    status.textContent = 'This browser does not support speech recognition. Try Chrome, Edge, or Safari.';
+    return;
+  }
+
+  // lowercase, keep letters and internal apostrophes, split into words
+  function normalize(text) {
+    return text.toLowerCase()
+      .replace(/[^a-z']+/g, ' ')
+      .split(' ')
+      .map(function(w) { return w.replace(/^'+|'+$/g, ''); })
+      .filter(Boolean);
+  }
+
+  // one entry per markable word, in poem order (a hyphenated display word
+  // can contribute more than one)
+  var spans = Array.from(document.querySelectorAll('.say-word'));
+  var poemWords = [];
+  spans.forEach(function(span) {
+    normalize(span.textContent).forEach(function(w) {
+      poemWords.push({ span: span, word: w, hit: false });
+    });
+  });
+
+  var rec = null;
+  var recording = false;
+  var heard = '';
+
+  startBtn.addEventListener('click', function() {
+    heard = '';
+    poemWords.forEach(function(pw) { pw.hit = false; });
+    spans.forEach(function(s) { s.classList.remove('word-missed'); });
+    document.getElementById('result').style.display = 'none';
+    recording = true;
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+    status.textContent = 'Listening. Recite the poem, then press Stop.';
+
+    rec = new SR();
+    rec.lang = 'en-GB';
+    rec.continuous = true;
+    rec.interimResults = false;
+    rec.onresult = function(e) {
+      for (var i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) heard += e.results[i][0].transcript + ' ';
+      }
+      status.textContent = 'Listening. ' + normalize(heard).length + ' words heard so far.';
+    };
+    rec.onerror = function(e) {
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+        recording = false;
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        status.textContent = 'Microphone access was denied.';
+      }
+    };
+    // the browser stops listening after a silence; restart until Stop is pressed
+    rec.onend = function() {
+      if (recording) rec.start();
+      else mark();
+    };
+    rec.start();
+  });
+
+  stopBtn.addEventListener('click', function() {
+    recording = false;
+    stopBtn.disabled = true;
+    rec.stop();
+  });
+
+  // align the heard words with the poem (longest common subsequence),
+  // then mark every poem word that was not matched
+  function mark() {
+    startBtn.disabled = false;
+    var said = normalize(heard);
+    var m = poemWords.length, n = said.length;
+    var W = n + 1;
+    var dp = new Uint16Array((m + 1) * (n + 1));
+    for (var i = m - 1; i >= 0; i--) {
+      for (var j = n - 1; j >= 0; j--) {
+        dp[i * W + j] = poemWords[i].word === said[j]
+          ? dp[(i + 1) * W + j + 1] + 1
+          : Math.max(dp[(i + 1) * W + j], dp[i * W + j + 1]);
+      }
+    }
+    var matched = 0, i2 = 0, j2 = 0;
+    while (i2 < m && j2 < n) {
+      if (poemWords[i2].word === said[j2]) {
+        poemWords[i2].hit = true;
+        matched++; i2++; j2++;
+      } else if (dp[(i2 + 1) * W + j2] >= dp[i2 * W + j2 + 1]) {
+        i2++;
+      } else {
+        j2++;
+      }
+    }
+    poemWords.forEach(function(pw) {
+      if (!pw.hit) pw.span.classList.add('word-missed');
+    });
+
+    var pct = m ? Math.round(matched / m * 100) : 0;
+    document.getElementById('score').textContent =
+      matched + ' / ' + m + ' words (' + pct + '%).';
+    document.getElementById('transcript').textContent = heard.trim() || '(nothing)';
+    document.getElementById('result').style.display = 'block';
+    status.textContent = '';
+  }
+})();
+</script>
+{% endblock %}

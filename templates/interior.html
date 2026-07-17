@@ -1,18 +1,18 @@
-{% extends "base.html" %} {% block title %}Home Interior — The Poetry House{%
-endblock %} {% block content %}
-<pre class="floor-plan">+--------------------------------------+
-|                                      |
-|  +-----------+    +------------+     |
-|  |           |    |            |     |
-|  | <a href="{{ url_for('library') }}">BOOKSHELF</a> |    |   <a href="{{ url_for('study') }}">STUDY</a>    |     |
-|  |           |    |            |     |
-|  +-----------+    +------------+     |
-|                                      |
-|         +------------------+         |
-|         |                  |         |
-|         |   <a href="{{ url_for('recital') }}">RECITAL ROOM</a>   |         |
-|         |                  |         |
-|         +------------------+         |
-|                                      |
-+--------------------------------------+</pre>
+{% extends "base.html" %}
+{% block title %}My house — The Poetry House{% endblock %}
+{% block content %}
+
+<h2>My house</h2>
+
+<dl>
+  <dt><a href="{{ url_for('home_shelf') }}">Bookshelf</a></dt>
+  <dd>Books you have checked out of the library.</dd>
+
+  <dt><a href="{{ url_for('notebook') }}">Notebook</a></dt>
+  <dd>Poems you are learning, with your notes.</dd>
+
+  <dt><a href="{{ url_for('recital_pick') }}">Recital room</a></dt>
+  <dd>Recite a poem from memory.</dd>
+</dl>
+
 {% endblock %}

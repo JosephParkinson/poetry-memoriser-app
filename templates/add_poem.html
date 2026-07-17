@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Add a poem — The Poetry House{% endblock %}
+{% block content %}
+
+<h2>Add a poem</h2>
+
+<form method="POST">
+  <label for="title">Title (required)</label>
+  <input type="text" id="title" name="title" autofocus>
+
+  <label for="author_name">Author</label>
+  <input type="text" id="author_name" name="author_name">
+
+  <label for="body">Poem text (required)</label>
+  <textarea id="body" name="body" rows="20"></textarea>
+
+  <label for="period">Period / movement</label>
+  <input type="text" id="period" name="period" placeholder="e.g. Romantics">
+
+  <label for="year_written">Year written</label>
+  <input type="text" id="year_written" name="year_written" placeholder="e.g. 1819">
+
+  <button type="submit">Add to notebook</button>
+</form>
+
+<p><a href="{{ url_for('notebook') }}">Back to the notebook</a></p>
+
+{% endblock %}
