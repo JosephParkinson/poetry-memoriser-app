@@ -2,12 +2,12 @@
 {% block title %}Recite aloud: {{ poem.title }}{% endblock %}
 {% block content %}
 
-<h2>Recite aloud: {{ poem.title }}</h2>
+<h2>Recite aloud: {{ poem.title }}{% if part_title %} — {{ part_title|lower }}{% endif %}</h2>
 {% if poem.author_name %}
 <p class="byline">by {{ poem.author_name }}</p>
 {% endif %}
 
-<p>Press Start and recite the poem aloud. Press Stop when you have finished;
+<p>Press Start and recite aloud. Press Stop when you have finished;
 your recitation is then marked against the text. Near misses are accepted
 ("o'er" heard as "over" still counts).</p>
 
@@ -22,15 +22,20 @@ your recitation is then marked against the text. Near misses are accepted
   <p id="score" class="notice"></p>
   <p>Missed words are shown in red.</p>
   <div class="poem" id="marked-poem">
-{%- for line in poem.body.split('\n') -%}
+{%- for line in text.split('\n') -%}
 {%- for w in line.split() -%}<span class="say-word">{{ w }}</span>{{ ' ' }}{%- endfor -%}<br>
 {%- endfor -%}
   </div>
   <p class="muted">What was heard:</p>
   <p class="muted" id="transcript"></p>
+  {% if mark_action %}
+  <form method="POST" action="{{ mark_action }}">
+    <button type="submit">Mark {{ part_title|lower }} learned</button>
+  </form>
+  {% endif %}
 </div>
 
-<p><a href="{{ url_for('recital', poem_id=poem.id) }}">Back to the recital</a></p>
+<p><a href="{{ back_url }}">{{ back_label }}</a></p>
 
 <script>
 // ---- matching helpers (no DOM; testable on their own) ----

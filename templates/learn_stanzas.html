@@ -37,6 +37,10 @@
 </table>
 
 <p>
+  <a href="{{ url_for('recital', poem_id=poem.id) }}">Recite the full poem</a>
+</p>
+
+<p>
   <a href="{{ url_for('library_poem', poem_id=poem.id) }}">Back to the poem</a>
   |
   <a href="{{ url_for('notebook') }}">Back to favourites</a>

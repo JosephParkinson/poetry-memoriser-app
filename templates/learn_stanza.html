@@ -47,6 +47,12 @@ endblock %} {% block content %}
 </form>
 
 <p>
+  <a href="{{ url_for('learn_stanza_aloud', poem_id=poem.id, idx=idx) }}"
+    >Recite this part aloud</a
+  >
+</p>
+
+<p>
   <a href="{{ url_for('learn_stanzas', poem_id=poem.id) }}"
     >Back to the parts list</a
   >

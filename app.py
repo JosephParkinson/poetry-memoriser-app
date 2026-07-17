@@ -302,7 +302,36 @@ def recital_aloud(poem_id):
     poem = db.get_poem(poem_id)
     if not poem:
         return redirect(url_for("recital_pick"))
-    return render_template("recital_aloud.html", poem=poem)
+    return render_template(
+        "recital_aloud.html",
+        poem=poem,
+        text=poem["body"],
+        part_title=None,
+        mark_action=None,
+        back_url=url_for("recital", poem_id=poem_id),
+        back_label="Back to the recital",
+    )
+
+
+@app.route("/learn/<int:poem_id>/stanza/<int:idx>/aloud")
+@login_required
+def learn_stanza_aloud(poem_id, idx):
+    poem = db.get_poem(poem_id)
+    if not can_view_poem(poem):
+        return redirect(url_for("library"))
+    chunks = db.split_chunks(poem["body"])
+    if idx < 0 or idx >= len(chunks):
+        return redirect(url_for("learn_stanzas", poem_id=poem_id))
+    chunk = chunks[idx]
+    return render_template(
+        "recital_aloud.html",
+        poem=poem,
+        text=chunk["text"],
+        part_title=chunk["title"],
+        mark_action=url_for("learn_stanza", poem_id=poem_id, idx=idx),
+        back_url=url_for("learn_stanza", poem_id=poem_id, idx=idx),
+        back_label="Back to " + chunk["title"].lower(),
+    )
 
 
 # ── archive ───────────────────────────────────────────────────────────────────
