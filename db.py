@@ -1,8 +1,16 @@
 import sqlite3
 import hashlib
+import os
 import re
 
-DB_PATH = "poetry_house.db"
+from werkzeug.security import generate_password_hash, check_password_hash
+
+# resolve paths against this file, not the working directory, so the app
+# finds its database no matter where the server is started from.
+# POETRY_DB_PATH overrides the database location (used in deployment).
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.environ.get("POETRY_DB_PATH",
+                         os.path.join(BASE_DIR, "poetry_house.db"))
 
 
 def get_db():
@@ -14,23 +22,19 @@ def get_db():
 
 def init_db():
     conn = get_db()
-    with open("schema.sql") as f:
+    with open(os.path.join(BASE_DIR, "schema.sql")) as f:
         conn.executescript(f.read())
     conn.close()
 
 
 # ── auth ──────────────────────────────────────────────────────────────────────
 
-def hash_password(password):
-    return hashlib.sha256(password.encode()).hexdigest()
-
-
 def create_user(username, password):
     conn = get_db()
     try:
         conn.execute(
             "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-            (username, hash_password(password)),
+            (username, generate_password_hash(password)),
         )
         conn.commit()
         return True
@@ -45,10 +49,24 @@ def verify_user(username, password):
     row = conn.execute(
         "SELECT * FROM users WHERE username = ?", (username,)
     ).fetchone()
+    if not row:
+        conn.close()
+        return None
+    stored = row["password_hash"]
+    if "$" in stored:
+        ok = check_password_hash(stored, password)
+    else:
+        # account from before salted hashing: check the legacy unsalted
+        # sha256 hash, and upgrade it to a salted one on success.
+        ok = stored == hashlib.sha256(password.encode()).hexdigest()
+        if ok:
+            conn.execute(
+                "UPDATE users SET password_hash = ? WHERE id = ?",
+                (generate_password_hash(password), row["id"]),
+            )
+            conn.commit()
     conn.close()
-    if row and row["password_hash"] == hash_password(password):
-        return dict(row)
-    return None
+    return dict(row) if ok else None
 
 
 # ── all poems (public) ────────────────────────────────────────────────────────
