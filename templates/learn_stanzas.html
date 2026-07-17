@@ -1,15 +1,11 @@
-{% extends "base.html" %}
-{% block title %}Learn in parts: {{ poem.title }}{% endblock %}
+{% extends "base.html" %} {% block title %}Learn: {{ poem.title }}{% endblock %}
 {% block content %}
 
-<h2>Learn in parts</h2>
-<p class="byline">{{ poem.title }}{% if poem.author_name %}, by {{ poem.author_name }}{% endif %}</p>
-
-<p>Learn the poem one part at a time: a part is a stanza, or a group of
-four lines when the poem has no stanza breaks. A part counts as learned
-once you recite it in full.</p>
-
-<p>{{ learned_count }} / {{ total }} parts learned.</p>
+<h2>Learn</h2>
+<p class="byline">
+  {{ poem.title }}{% if poem.author_name %}, by {{ poem.author_name }}{% endif
+  %}
+</p>
 
 {% if just_learned is not none %}
 <p class="notice">{{ steps[just_learned].title }} learned.</p>
@@ -25,23 +21,25 @@ once you recite it in full.</p>
   {% for s in steps %}
   <tr>
     <td>{{ s.title }}</td>
-    <td>{{ s.preview[:44] }}{% if s.preview|length > 44 %}&hellip;{% endif %}</td>
-    <td>{% if s.learned %}learned{% elif s.index == next_index %}next{% endif %}</td>
-    <td><a href="{{ url_for('learn_stanza', poem_id=poem.id, idx=s.index) }}">{% if s.learned %}Revisit{% else %}Learn{% endif %}</a></td>
+    <td>
+      {{ s.preview[:44] }}{% if s.preview|length > 44 %}&hellip;{% endif %}
+    </td>
+    <td>
+      {% if s.learned %}learned{% elif s.index == next_index %}next{% endif %}
+    </td>
+    <td>
+      <a href="{{ url_for('learn_stanza', poem_id=poem.id, idx=s.index) }}"
+        >{% if s.learned %}Revisit{% else %}Learn{% endif %}</a
+      >
+    </td>
   </tr>
   {% endfor %}
 </table>
 
-{% if next_index is not none %}
-<p><a href="{{ url_for('learn_stanza', poem_id=poem.id, idx=next_index) }}">Next: {{ steps[next_index].title|lower }}</a></p>
-{% else %}
-<p class="notice">All parts learned.</p>
-<p><a href="{{ url_for('recital', poem_id=poem.id) }}">Recite the whole poem</a></p>
-{% endif %}
-
 <p>
-  <a href="{{ url_for('learn', poem_id=poem.id, mode='reading') }}">Whole-poem stages</a> |
-  <a href="{{ url_for('notebook') }}">Back to the notebook</a>
+  <a href="{{ url_for('library_poem', poem_id=poem.id) }}">Back to the poem</a>
+  |
+  <a href="{{ url_for('notebook') }}">Back to favourites</a>
 </p>
 
 {% endblock %}

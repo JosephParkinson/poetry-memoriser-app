@@ -1,116 +1,208 @@
-{% extends "base.html" %}
-{% block title %}{{ title }}: {{ poem.title }}{% endblock %}
-{% block content %}
+{% extends "base.html" %} {% block title %}{{ title }}: {{ poem.title }}{%
+endblock %} {% block content %}
 
 <h2>{{ title }} ({{ label }} of {{ total }})</h2>
-<p class="byline">{{ poem.title }}{% if poem.author_name %}, by {{ poem.author_name }}{% endif %}</p>
+<p class="byline">
+  {{ poem.title }}{% if poem.author_name %}, by {{ poem.author_name }}{% endif
+  %}
+</p>
 
-{% for lv in levels %}
-<div class="level" data-key="{{ lv.key }}"{% if not loop.first %} style="display:none"{% endif %}>
-  <p>Step {{ loop.index }} of {{ levels|length }} — {{ lv.label }}</p>
-  <p class="muted">{{ lv.hint }}</p>
-  <div class="poem-fill">
-{%- for tok in lv.tokens -%}
-{%- if tok.type == 'word' -%}{{ tok.text }}{%- elif tok.type == 'space' -%}{{ ' ' }}{%- elif tok.type == 'newline' -%}<br>{%- elif tok.type == 'blank' -%}<span class="blank-slot" data-word="{{ tok.word }}">{{ tok.word }}</span>{%- endif -%}
-{%- endfor -%}
-  </div>
-  {% if loop.first %}
-  <button type="button" id="start-btn">Start</button>
-  {% endif %}
+<p class="stage-row">
+  <button type="button">Read</button>
+  <button type="button">10%</button>
+  <button type="button">25%</button>
+  <button type="button">50%</button>
+  <button type="button">75%</button>
+  <button type="button">100%</button>
+  <button type="button">Recite</button>
+</p>
+
+<p class="muted" id="hint"></p>
+
+<div class="poem-fill" id="poem">
+  {%- for tok in tokens -%} {%- if tok.type == 'lettered' -%}<span class="w"
+    >{{ tok.text }}</span
+  >{%- elif tok.type == 'word' -%}{{ tok.text }}{%- elif tok.type == 'space'
+  -%}{{ ' ' }}{%- elif tok.type == 'newline' -%}<br />{%- endif -%} {%- endfor
+  -%}
 </div>
-{% endfor %}
 
-<form id="done-form" method="POST" style="display:none">
-  <button type="submit" id="done-btn">{{ title }} learned</button>
+<p id="controls" style="display: none">
+  <button type="button" id="retry-btn">Retry</button>
+  <button type="button" id="next-btn">Next</button>
+</p>
+
+<form id="done-form" method="POST" style="display: none">
+  <button type="submit">{{ title }} learned</button>
 </form>
 
-<p><a href="{{ url_for('learn_stanzas', poem_id=poem.id) }}">Back to the parts list</a></p>
+<p>
+  <a href="{{ url_for('learn_stanzas', poem_id=poem.id) }}"
+    >Back to the parts list</a
+  >
+</p>
 
 <script>
-(function() {
-  function firstAlpha(word) {
-    var m = word.match(/[a-zA-Z]/);
-    return m ? m[0].toLowerCase() : null;
-  }
+  (function () {
+    var STAGES = [
+      { frac: 0 }, // Read
+      { frac: 0.1 },
+      { frac: 0.25 },
+      { frac: 0.5 },
+      { frac: 0.75 },
+      { frac: 1 }, // 100%: all words hidden, underlines shown
+      { frac: 1, bare: true }, // Recite: all hidden, no underlines
+    ];
+    var words = Array.from(document.querySelectorAll("#poem .w"));
+    var stageBtns = Array.from(document.querySelectorAll(".stage-row button"));
+    var poemEl = document.getElementById("poem");
+    var hintEl = document.getElementById("hint");
+    var controls = document.getElementById("controls");
+    var retryBtn = document.getElementById("retry-btn");
+    var nextBtn = document.getElementById("next-btn");
 
-  // a recite loop over the .blank-slot elements inside `container`.
-  // a blank is auto-filled (revealed) after 3 wrong keystrokes so the user
-  // never gets stuck.
-  function makeRunner(container, onDone) {
-    var blanks = Array.from(container.querySelectorAll('.blank-slot'));
-    var cur = 0;
-    var wrong = 0;
+    var cur = 0; // current stage index
+    var blanks = []; // hidden words this attempt, in poem order
+    var at = 0; // position within blanks
+    var wrong = 0; // wrong keystrokes on the current blank
+    var missed = []; // words auto-revealed this attempt
+    var lastMissed = []; // words missed on the finished attempt (for Retry)
+    var finished = true;
 
-    function activate(idx) {
-      blanks.forEach(function(b) { b.classList.remove('active'); });
-      if (idx < blanks.length) {
+    function shuffle(a) {
+      for (var i = a.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = a[i];
+        a[i] = a[j];
+        a[j] = t;
+      }
+      return a;
+    }
+
+    function firstAlpha(word) {
+      var m = word.match(/[a-zA-Z]/);
+      return m ? m[0].toLowerCase() : null;
+    }
+
+    // start (or restart) a stage. `force` lists words that must be hidden —
+    // used by Retry so anything missed last time is asked again.
+    function setStage(i, force) {
+      cur = i;
+      var st = STAGES[i];
+      stageBtns.forEach(function (b, j) {
+        b.classList.toggle("current", j === i);
+      });
+      poemEl.classList.toggle("no-underlines", !!st.bare);
+      words.forEach(function (w) {
+        w.className = "w";
+      });
+      controls.style.display = "none";
+      blanks = [];
+      at = 0;
+      wrong = 0;
+      missed = [];
+
+      if (st.frac === 0) {
+        finished = true;
+        retryBtn.style.display = "none";
+        controls.style.display = "block";
+        return;
+      }
+
+      var k = Math.max(1, Math.round(words.length * st.frac));
+      var chosen = [];
+      (force || []).forEach(function (w) {
+        if (chosen.indexOf(w) === -1) chosen.push(w);
+      });
+      shuffle(words.slice()).forEach(function (w) {
+        if (chosen.length < k && chosen.indexOf(w) === -1) chosen.push(w);
+      });
+      blanks = words.filter(function (w) {
+        return chosen.indexOf(w) !== -1;
+      });
+      blanks.forEach(function (w) {
+        w.classList.add("blank-slot");
+      });
+      finished = false;
+      activate(0);
+    }
+
+    function activate(i) {
+      blanks.forEach(function (b) {
+        b.classList.remove("active");
+      });
+      if (i < blanks.length) {
         wrong = 0;
-        blanks[idx].classList.add('active');
-        blanks[idx].scrollIntoView({ block: 'nearest' });
+        blanks[i].classList.add("active");
+        blanks[i].scrollIntoView({ block: "nearest" });
       } else {
-        onDone();
+        finished = true;
+        lastMissed = missed.slice();
+        retryBtn.style.display = "";
+        controls.style.display = "block";
       }
     }
 
-    function advance() { cur++; activate(cur); }
-
-    function onKey(e) {
+    document.addEventListener("keydown", function (e) {
+      if (finished) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key.length !== 1) return;
-      if (cur >= blanks.length) return;
 
-      var blank = blanks[cur];
-      var expected = firstAlpha(blank.dataset.word);
-      if (!expected) { advance(); return; }
+      var blank = blanks[at];
+      var expected = firstAlpha(blank.textContent);
+      if (!expected) {
+        at++;
+        activate(at);
+        e.preventDefault();
+        return;
+      }
 
       if (e.key.toLowerCase() === expected) {
-        blank.classList.remove('active', 'flash-wrong');
-        blank.classList.add('filled');
-        advance();
+        blank.classList.remove("active", "flash-wrong");
+        blank.classList.add("filled");
+        at++;
+        activate(at);
       } else {
         wrong++;
         clearTimeout(blank.wrongTimer);
-        blank.classList.add('flash-wrong');
-        blank.wrongTimer = setTimeout(function() { blank.classList.remove('flash-wrong'); }, 300);
+        blank.classList.add("flash-wrong");
+        blank.wrongTimer = setTimeout(function () {
+          blank.classList.remove("flash-wrong");
+        }, 300);
         if (wrong >= 3) {
-          // 3 wrong tries: fill it in for them and move on.
-          blank.classList.remove('active', 'flash-wrong');
-          blank.classList.add('revealed');
-          advance();
+          // 3 wrong tries: fill it in and move on so the user can't get stuck
+          blank.classList.remove("active", "flash-wrong");
+          blank.classList.add("revealed");
+          missed.push(blank);
+          at++;
+          activate(at);
         }
       }
       e.preventDefault();
-    }
+    });
 
-    return {
-      start: function() { document.addEventListener('keydown', onKey); activate(0); },
-      stop:  function() { document.removeEventListener('keydown', onKey); }
-    };
-  }
+    stageBtns.forEach(function (b, i) {
+      b.addEventListener("click", function () {
+        this.blur();
+        setStage(i);
+      });
+    });
 
-  var levels   = Array.from(document.querySelectorAll('.level'));
-  var doneForm = document.getElementById('done-form');
-  var startBtn = document.getElementById('start-btn');
-  var current  = null;
+    retryBtn.addEventListener("click", function () {
+      this.blur();
+      setStage(cur, lastMissed);
+    });
 
-  function run(i) {
-    if (current) current.stop();
-    levels.forEach(function(el, idx) { el.style.display = (idx === i) ? 'block' : 'none'; });
-    levels[i].scrollIntoView({ block: 'start' });
-    current = makeRunner(levels[i], function() {
-      if (i === levels.length - 1) {
-        if (current) current.stop();
-        doneForm.style.display = 'block';
-        document.getElementById('done-btn').focus();
+    nextBtn.addEventListener("click", function () {
+      this.blur();
+      if (cur === STAGES.length - 1) {
+        document.getElementById("done-form").submit();
       } else {
-        run(i + 1);      // auto-advance to the next (harder) level
+        setStage(cur + 1);
       }
     });
-    current.start();
-  }
 
-  // the first level is the read-through: show it, wait for the start button.
-  startBtn.addEventListener('click', function() { run(1); });
-})();
+    setStage(0);
+  })();
 </script>
 {% endblock %}

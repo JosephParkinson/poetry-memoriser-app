@@ -9,7 +9,10 @@ think Wikipedia or the Stanford Encyclopedia of Philosophy, but dark: near-black
 background (#181818), light grey serif text (Georgia/Times), plain lists, tables,
 and forms. Links are the same colour as body text, indicated by underline only —
 no blue, no visited colour.
-The house/rooms structure (library, bookshelf, notebook, recital room) stays.
+Structure: nav has only Home and My Account (Log In when logged out).
+Home = search bar (by author or title) + Browse link to All Poems.
+My Account = Favourites (internally still the `notebook` routes/tables)
+and Completed Poems (internally `archive`), plus log out.
 
 Hard rules — the user will be very upset if these are broken:
 
@@ -39,5 +42,9 @@ tuning learning drills:
   whole thing" — scaffold the steps in between.
 - Provide safety nets so the user can't get stuck. e.g. the recite engine
   auto-fills a word after 3 wrong keystrokes.
-- Let the user keep momentum (auto-advance between steps rather than making them
-  click through).
+- Do NOT auto-advance between stages (changed 2026-07-17: the user asked for
+  explicit control). After each exercise show Retry and Next buttons; Retry
+  re-hides any word missed on the previous attempt.
+- Learning is part-by-part only (stanzas, or 4-line groups): stage buttons
+  Read / 10% / 25% / 50% / 75% / 100% / Recite on each part. The whole-poem
+  stage flow was removed.

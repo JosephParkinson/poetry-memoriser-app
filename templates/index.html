@@ -2,17 +2,13 @@
 {% block title %}The Poetry House{% endblock %}
 {% block content %}
 
-<p>A tool for memorising poems. Check out books from the library, copy poems
-into your notebook, and learn them stage by stage until you can recite them
-from memory.</p>
+<div class="centered">
+  <form method="GET" action="{{ url_for('library') }}">
+    <input type="text" name="q" class="search-box" placeholder="Search for Poems by author or title">
+    <button type="submit">Search</button>
+  </form>
 
-<ul>
-  <li><a href="{{ url_for('library') }}">Library</a> — browse books by period and check them out.</li>
-  {% if session.user_id %}
-  <li><a href="{{ url_for('interior') }}">My house</a> — your bookshelf, notebook, and recital room.</li>
-  {% else %}
-  <li><a href="{{ url_for('login') }}">Log in</a> or <a href="{{ url_for('register') }}">register</a> to start learning poems.</li>
-  {% endif %}
-</ul>
+  <p><a href="{{ url_for('library') }}">Browse</a></p>
+</div>
 
 {% endblock %}

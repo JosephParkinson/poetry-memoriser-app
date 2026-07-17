@@ -12,15 +12,10 @@
 
       <p class="site-nav">
         <a href="{{ url_for('index') }}">Home</a> |
-        <a href="{{ url_for('library') }}">Library</a>
-        {%- if session.user_id %} |
-        <a href="{{ url_for('interior') }}">My house</a> |
-        <a href="{{ url_for('notebook') }}">Notebook</a> |
-        <a href="{{ url_for('archive') }}">Archive</a> |
-        <a href="{{ url_for('logout') }}">Log out ({{ session.username }})</a>
-        {%- else %} |
-        <a href="{{ url_for('login') }}">Log in</a> |
-        <a href="{{ url_for('register') }}">Register</a>
+        {%- if session.user_id %}
+        <a href="{{ url_for('account') }}">My Account</a>
+        {%- else %}
+        <a href="{{ url_for('login') }}">Log In</a>
         {%- endif %}
       </p>
 

@@ -1,9 +1,16 @@
 import sqlite3
 import hashlib
-import random
+import os
 import re
 
-DB_PATH = "poetry_house.db"
+from werkzeug.security import generate_password_hash, check_password_hash
+
+# resolve paths against this file, not the working directory, so the app
+# finds its database no matter where the server is started from.
+# POETRY_DB_PATH overrides the database location (used in deployment).
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.environ.get("POETRY_DB_PATH",
+                         os.path.join(BASE_DIR, "poetry_house.db"))
 
 
 def get_db():
@@ -15,23 +22,19 @@ def get_db():
 
 def init_db():
     conn = get_db()
-    with open("schema.sql") as f:
+    with open(os.path.join(BASE_DIR, "schema.sql")) as f:
         conn.executescript(f.read())
     conn.close()
 
 
 # ── auth ──────────────────────────────────────────────────────────────────────
 
-def hash_password(password):
-    return hashlib.sha256(password.encode()).hexdigest()
-
-
 def create_user(username, password):
     conn = get_db()
     try:
         conn.execute(
             "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-            (username, hash_password(password)),
+            (username, generate_password_hash(password)),
         )
         conn.commit()
         return True
@@ -46,36 +49,50 @@ def verify_user(username, password):
     row = conn.execute(
         "SELECT * FROM users WHERE username = ?", (username,)
     ).fetchone()
+    if not row:
+        conn.close()
+        return None
+    stored = row["password_hash"]
+    if "$" in stored:
+        ok = check_password_hash(stored, password)
+    else:
+        # account from before salted hashing: check the legacy unsalted
+        # sha256 hash, and upgrade it to a salted one on success.
+        ok = stored == hashlib.sha256(password.encode()).hexdigest()
+        if ok:
+            conn.execute(
+                "UPDATE users SET password_hash = ? WHERE id = ?",
+                (generate_password_hash(password), row["id"]),
+            )
+            conn.commit()
     conn.close()
-    if row and row["password_hash"] == hash_password(password):
-        return dict(row)
-    return None
+    return dict(row) if ok else None
 
 
-# ── library (public) ──────────────────────────────────────────────────────────
+# ── all poems (public) ────────────────────────────────────────────────────────
 
-LIBRARY_SHELVES = [
-    ("Romantics",     "romantics"),
-    ("Modernism",     "modernism"),
-    ("Victorian",     "victorian"),
-    ("Ancient",       "ancient"),
-    ("Contemporary",  "contemporary"),
-    ("Renaissance",   "renaissance"),
-]
+def get_all_poems(search=None):
+    """Every public poem, with a line count, for the All Poems page.
 
-
-def get_shelf_books(period):
+    With search, only poems whose title or author contains that text.
+    """
     conn = get_db()
-    rows = conn.execute(
-        """SELECT b.*, COUNT(bp.poem_id) as poem_count
-           FROM books b
-           LEFT JOIN book_poems bp ON b.id = bp.book_id
-           WHERE lower(b.period) = lower(?) AND b.is_public = 1
-           GROUP BY b.id ORDER BY b.title""",
-        (period,),
-    ).fetchall()
+    sql = """SELECT id, title, author_name, year_written, body
+             FROM poems WHERE is_public = 1"""
+    params = []
+    if search:
+        sql += " AND (title LIKE ? OR author_name LIKE ?)"
+        params = ["%" + search + "%"] * 2
+    sql += " ORDER BY author_name, year_written, title"
+    rows = conn.execute(sql, params).fetchall()
     conn.close()
-    return [dict(r) for r in rows]
+    poems = []
+    for r in rows:
+        p = dict(r)
+        body = p.pop("body")
+        p["line_count"] = sum(1 for ln in body.splitlines() if ln.strip())
+        poems.append(p)
+    return poems
 
 
 def create_poem(user_id, title, author_name, body, period=None, year_written=None):
@@ -84,7 +101,7 @@ def create_poem(user_id, title, author_name, body, period=None, year_written=Non
         """INSERT INTO poems
            (title, author_name, body, period, year_written,
             is_public_domain, is_public, created_by_user_id)
-           VALUES (?, ?, ?, ?, ?, 0, 0, ?)""",
+           VALUES (?, ?, ?, ?, ?, 0, 1, ?)""",
         (title, author_name or None, body, period or None,
          year_written or None, user_id),
     )
@@ -94,69 +111,11 @@ def create_poem(user_id, title, author_name, body, period=None, year_written=Non
     return poem_id
 
 
-def get_book(book_id):
-    conn = get_db()
-    row = conn.execute("SELECT * FROM books WHERE id = ?", (book_id,)).fetchone()
-    conn.close()
-    return dict(row) if row else None
-
-
-def get_book_poems(book_id):
-    conn = get_db()
-    rows = conn.execute(
-        """SELECT p.* FROM poems p
-           JOIN book_poems bp ON p.id = bp.poem_id
-           WHERE bp.book_id = ? ORDER BY bp.position""",
-        (book_id,),
-    ).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
-
-
 def get_poem(poem_id):
     conn = get_db()
     row = conn.execute("SELECT * FROM poems WHERE id = ?", (poem_id,)).fetchone()
     conn.close()
     return dict(row) if row else None
-
-
-# ── user books (shelf) ────────────────────────────────────────────────────────
-
-def checkout_book(user_id, book_id):
-    conn = get_db()
-    try:
-        conn.execute(
-            "INSERT OR IGNORE INTO user_books (user_id, book_id) VALUES (?, ?)",
-            (user_id, book_id),
-        )
-        conn.commit()
-    finally:
-        conn.close()
-
-
-def has_book(user_id, book_id):
-    conn = get_db()
-    row = conn.execute(
-        "SELECT 1 FROM user_books WHERE user_id = ? AND book_id = ?",
-        (user_id, book_id),
-    ).fetchone()
-    conn.close()
-    return row is not None
-
-
-def get_user_books(user_id):
-    conn = get_db()
-    rows = conn.execute(
-        """SELECT b.*, COUNT(bp.poem_id) as poem_count
-           FROM books b
-           JOIN user_books ub ON b.id = ub.book_id
-           LEFT JOIN book_poems bp ON b.id = bp.book_id
-           WHERE ub.user_id = ?
-           GROUP BY b.id ORDER BY ub.checked_out_at DESC""",
-        (user_id,),
-    ).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
 
 
 # ── notebook ──────────────────────────────────────────────────────────────────
@@ -170,6 +129,25 @@ def copy_to_notebook(user_id, poem_id):
     )
     conn.execute(
         "INSERT OR IGNORE INTO notebook_entries (user_id, poem_id) VALUES (?, ?)",
+        (user_id, poem_id),
+    )
+    conn.commit()
+    conn.close()
+
+
+def remove_from_notebook(user_id, poem_id):
+    """Remove a poem from the user's favourites.
+
+    Learning progress (stanza_progress, recital history) is kept, so adding
+    the poem back restores it.
+    """
+    conn = get_db()
+    conn.execute(
+        "DELETE FROM user_poems WHERE user_id = ? AND poem_id = ?",
+        (user_id, poem_id),
+    )
+    conn.execute(
+        "DELETE FROM notebook_entries WHERE user_id = ? AND poem_id = ?",
         (user_id, poem_id),
     )
     conn.commit()
@@ -206,27 +184,6 @@ def get_user_poem(user_id, poem_id):
     ).fetchone()
     conn.close()
     return dict(row) if row else None
-
-
-def get_notebook_entry(user_id, poem_id):
-    conn = get_db()
-    row = conn.execute(
-        "SELECT * FROM notebook_entries WHERE user_id = ? AND poem_id = ?",
-        (user_id, poem_id),
-    ).fetchone()
-    conn.close()
-    return dict(row) if row else None
-
-
-def save_notes(user_id, poem_id, notes):
-    conn = get_db()
-    conn.execute(
-        """UPDATE notebook_entries SET notes = ?, updated_at = CURRENT_TIMESTAMP
-           WHERE user_id = ? AND poem_id = ?""",
-        (notes, user_id, poem_id),
-    )
-    conn.commit()
-    conn.close()
 
 
 def set_learning_mode(user_id, poem_id, mode):
@@ -291,10 +248,9 @@ def save_recital_attempt(user_id, poem_id, attempt_text, score, passed):
 
 # ── learning helpers ──────────────────────────────────────────────────────────
 
-FILL_PERCENTS = {"fill_10": 10, "fill_25": 25, "fill_50": 50, "fill_100": 100}
-STAGE_ORDER = ["reading", "notes", "fill_10", "fill_25", "fill_50", "fill_100"]
-
-# user-facing names for the internal stage keys
+# user-facing names for the stored learning-mode keys. Only 'stanzas' is set
+# by the current code; the fill_* / reading / notes keys remain so poems
+# learned under the old whole-poem stages still display sensibly.
 STAGE_LABELS = {
     "reading": "reading",
     "notes": "notes",
@@ -304,77 +260,6 @@ STAGE_LABELS = {
     "fill_100": "all hidden",
     "stanzas": "in parts",
 }
-
-
-def next_stage(current):
-    try:
-        idx = STAGE_ORDER.index(current)
-        return STAGE_ORDER[idx + 1] if idx + 1 < len(STAGE_ORDER) else None
-    except ValueError:
-        return "reading"
-
-
-def prepare_fill_tokens(body, percent, seed):
-    """Return list of token dicts for fill-in-blanks rendering."""
-    lines = body.split("\n")
-    all_word_indices = []
-    flat_tokens = []
-
-    for line in lines:
-        words = line.split(" ")
-        first_on_line = True
-        for w in words:
-            if w:
-                if not first_on_line:
-                    flat_tokens.append({"type": "space", "_idx": -1})
-                first_on_line = False
-                idx = len(flat_tokens)
-                flat_tokens.append({"type": "word", "text": w, "_idx": idx})
-                if len(re.sub(r"[^\w]", "", w)) > 2:
-                    all_word_indices.append(idx)
-            else:
-                flat_tokens.append({"type": "space", "_idx": -1})
-        flat_tokens.append({"type": "newline", "_idx": -1})
-
-    n_blanks = max(1, int(len(all_word_indices) * percent / 100))
-    rng = random.Random(seed)
-    blanked = set(rng.sample(all_word_indices, min(n_blanks, len(all_word_indices))))
-
-    result = []
-    blank_n = 0
-    for tok in flat_tokens:
-        if tok["type"] != "word":
-            result.append({"type": tok["type"]})
-        elif tok["_idx"] in blanked:
-            word = tok["text"]
-            result.append({
-                "type": "blank",
-                "n": blank_n,
-                "word": word,
-                "size": max(3, len(re.sub(r"[^\w]", "", word))),
-            })
-            blank_n += 1
-        else:
-            result.append({"type": "word", "text": tok["text"]})
-
-    return result
-
-
-def check_fill_answers(body, percent, seed, form):
-    tokens = prepare_fill_tokens(body, percent, seed)
-    blanks = {t["n"]: t["word"] for t in tokens if t["type"] == "blank"}
-    correct = 0
-    results = {}
-    for n, expected in blanks.items():
-        submitted = form.get(f"blank_{n}", "").strip()
-        clean_e = re.sub(r"[^\w]", "", expected).lower()
-        clean_s = re.sub(r"[^\w]", "", submitted).lower()
-        ok = clean_s == clean_e
-        results[n] = {"submitted": submitted, "expected": expected, "correct": ok}
-        if ok:
-            correct += 1
-    score = correct / len(blanks) if blanks else 0
-    return results, score
 
 
 def prepare_recital_tokens(body):
@@ -394,34 +279,7 @@ def prepare_recital_tokens(body):
     return result
 
 
-def score_recital(attempt, body):
-    poem_words = re.findall(r"[a-zA-Z']+", body)
-    expected = [w[0].lower() for w in poem_words]
-    typed = [c.lower() for c in re.findall(r"[a-zA-Z]", attempt)]
-    if not expected:
-        return 0, False, 0, 0
-    correct = sum(1 for a, e in zip(typed, expected) if a == e)
-    score = correct / len(expected)
-    return round(score * 100), score >= 0.9, correct, len(expected)
-
-
-# ── stanza by stanza ────────────────────────────────────────────────────────────
-
-# a stanza is learned through a gentle difficulty ramp (prepare_stanza_levels):
-# read it, then progressively more words are hidden until you recite it in
-# full. the hiding is nested (each level blanks a superset of the last) and its
-# order is seeded by the stanza index, so every stanza is blanked differently.
-STANZA_LEVELS = [
-    {"key": "read",   "frac": 0.0,  "label": "read it through",
-     "hint": "Read the whole stanza. Take your time, then start."},
-    {"key": "some",   "frac": 0.4,  "label": "fill the gaps",
-     "hint": "Type the first letter of each hidden word. 3 wrong tries fills it in for you."},
-    {"key": "most",   "frac": 0.75, "label": "most words hidden",
-     "hint": "More words are hidden — keep going."},
-    {"key": "recite", "frac": 1.0,  "label": "recite it all",
-     "hint": "The whole stanza, from memory."},
-]
-
+# ── learn in parts ────────────────────────────────────────────────────────────
 
 def split_stanzas(body):
     """Split a poem into stanzas on blank-line boundaries."""
@@ -485,7 +343,7 @@ def mark_stanza_learned(user_id, poem_id, stanza_index):
     conn.close()
 
 
-def _tokenize_stanza(stanza):
+def tokenize_stanza(stanza):
     """Flatten a stanza into render tokens, numbering the lettered words.
 
     Returns (tokens, order): tokens is the flat sequence (lettered/word/space/
@@ -515,37 +373,3 @@ def _tokenize_stanza(stanza):
     return tokens, order
 
 
-def _render_level(tokens, blanked):
-    """Render flat tokens for one level, blanking the given set of word indices."""
-    out = []
-    for t in tokens:
-        if t["type"] == "lettered":
-            if t["widx"] in blanked:
-                out.append({"type": "blank", "word": t["text"]})
-            else:
-                out.append({"type": "word", "text": t["text"]})
-        elif t["type"] == "word":
-            out.append({"type": "word", "text": t["text"]})
-        else:
-            out.append({"type": t["type"]})
-    return out
-
-
-def prepare_stanza_levels(stanza, seed):
-    """Build the difficulty ramp for one stanza (see STANZA_LEVELS)."""
-    tokens, order = _tokenize_stanza(stanza)
-    n = len(order)
-    shuffled = list(order)
-    random.Random(seed).shuffle(shuffled)
-
-    levels = []
-    for spec in STANZA_LEVELS:
-        k = int(round(n * spec["frac"]))
-        blanked = set(shuffled[:k])
-        levels.append({
-            "key": spec["key"],
-            "label": spec["label"],
-            "hint": spec["hint"],
-            "tokens": _render_level(tokens, blanked),
-        })
-    return levels

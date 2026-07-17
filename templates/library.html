@@ -1,15 +1,54 @@
 {% extends "base.html" %}
-{% block title %}Library — The Poetry House{% endblock %}
+{% from "_sort.html" import th %}
+{% block title %}{% if q %}Search results{% else %}All Poems{% endif %} — The Poetry House{% endblock %}
 {% block content %}
 
-<h2>Library</h2>
+{% if q %}
+<h2>Search results</h2>
+<p>{{ poems|length }} result{% if poems|length != 1 %}s{% endif %} for "{{ q }}".
+<a href="{{ url_for('library') }}">Browse all poems</a>.</p>
+{% else %}
+<h2>All Poems</h2>
+{% endif %}
 
-<p>Books are shelved by period.</p>
-
-<ul>
-  {% for label, period in shelves %}
-  <li><a href="{{ url_for('library_shelf', period=period) }}">{{ label }}</a></li>
+{% if poems %}
+<table>
+  <tr>
+    {{ th('Poem', 'title', sort, dir, 'library', q or none) }}
+    {{ th('Author', 'author', sort, dir, 'library', q or none) }}
+    {{ th('Year', 'year', sort, dir, 'library', q or none) }}
+    {{ th('Lines', 'lines', sort, dir, 'library', q or none) }}
+    {% if session.user_id %}<th></th>{% endif %}
+  </tr>
+  {% for p in poems %}
+  <tr>
+    <td><a href="{{ url_for('library_poem', poem_id=p.id) }}">{{ p.title }}</a></td>
+    <td>{{ p.author_name or '' }}</td>
+    <td>{{ p.year_written or '' }}</td>
+    <td>{{ p.line_count }}</td>
+    {% if session.user_id %}
+    <td>
+      {% if p.id in in_notebook %}
+      in favourites
+      {% else %}
+      <form method="POST" action="{{ url_for('copy_to_notebook', poem_id=p.id) }}" style="display:inline">
+        <input type="hidden" name="next" value="{{ url_for('library', q=q or none, sort=sort, dir=dir if sort else none) }}">
+        <button type="submit">Add to favourites</button>
+      </form>
+      {% endif %}
+    </td>
+    {% endif %}
+  </tr>
   {% endfor %}
-</ul>
+</table>
+{% elif not q %}
+<p>No poems yet.</p>
+{% endif %}
+
+{% if session.user_id %}
+<p><a href="{{ url_for('add_poem') }}">Add a poem</a></p>
+{% else %}
+<p><a href="{{ url_for('login') }}">Log in</a> to add poems to your favourites.</p>
+{% endif %}
 
 {% endblock %}
