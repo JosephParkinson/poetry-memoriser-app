@@ -1,4 +1,6 @@
-# CLAUDE.md — The Poetry House
+# CLAUDE.md — Memorise Poetry
+
+The app is called "Memorise Poetry" (renamed from "The Poetry House", July 2026).
 
 Working notes for this repo. See the memory index for stack/architecture details.
 

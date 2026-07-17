@@ -18,6 +18,16 @@
   >
 </p>
 
+<input
+  type="text"
+  id="key-catcher"
+  class="key-catcher"
+  autocomplete="off"
+  autocapitalize="off"
+  autocorrect="off"
+  spellcheck="false"
+/>
+
 <div class="poem-fill" id="poem-fill">
   {%- for tok in tokens -%} {%- if tok.type == 'space' -%}{{ ' ' }}{%- elif
   tok.type == 'newline' -%}<br />{%- elif tok.type == 'blank' -%}<span
@@ -36,6 +46,7 @@
 <script>
   (function () {
     var blanks = Array.from(document.querySelectorAll(".blank-slot"));
+    var keyInput = document.getElementById("key-catcher");
     var cur = 0;
 
     document
@@ -59,14 +70,13 @@
         blanks[idx].classList.add("active");
         blanks[idx].scrollIntoView({ block: "nearest" });
       } else {
+        keyInput.blur();
         document.getElementById("done-form").style.display = "block";
         document.getElementById("done-btn").focus();
       }
     }
 
-    document.addEventListener("keydown", function (e) {
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-      if (e.key.length !== 1) return;
+    function handleChar(ch) {
       if (cur >= blanks.length) return;
 
       var blank = blanks[cur];
@@ -77,7 +87,7 @@
         return;
       }
 
-      if (e.key.toLowerCase() === expected) {
+      if (ch.toLowerCase() === expected) {
         blank.classList.remove("active", "flash-wrong");
         blank.classList.add("filled");
         cur++;
@@ -89,10 +99,34 @@
           blank.classList.remove("flash-wrong");
         }, 300);
       }
+    }
+
+    document.addEventListener("keydown", function (e) {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key.length !== 1) return;
+      if (cur >= blanks.length) return;
+      handleChar(e.key);
       e.preventDefault();
     });
 
+    // mobile soft keyboards type into the invisible input instead of firing
+    // usable keydown events. Desktop keydown preventDefaults before the
+    // character reaches the input, so each keystroke is handled exactly once.
+    keyInput.addEventListener("input", function () {
+      var v = this.value;
+      this.value = "";
+      if (v) handleChar(v.charAt(v.length - 1));
+    });
+
+    // tapping the poem opens (or reopens) the keyboard on mobile
+    document
+      .getElementById("poem-fill")
+      .addEventListener("click", function () {
+        if (cur < blanks.length) keyInput.focus();
+      });
+
     activate(0);
+    keyInput.focus();
   })();
 </script>
 {% endblock %}
