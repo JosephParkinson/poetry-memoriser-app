@@ -205,6 +205,18 @@ button:active {
 
 /* ---- fill-in-the-blanks / recital ---- */
 
+/* invisible input that receives typing during the drills. Focusing it makes
+   the on-screen keyboard open on mobile; desktop typing works either way. */
+input.key-catcher {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
 .poem-fill {
     white-space: pre-wrap;
     line-height: 2;
