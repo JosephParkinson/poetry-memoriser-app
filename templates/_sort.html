@@ -1,0 +1,15 @@
+{#
+  Sortable column header. Every column shows a triangle arrow: down by
+  default; when the table is sorted by that column the arrow is underlined
+  and shows the direction (up = ascending, down = descending). Clicking
+  toggles: unsorted -> ascending -> descending -> ascending.
+  q is only used by the All Poems page (kept so sorting preserves a search).
+#}
+{% macro th(label, key, sort, dir, endpoint, q=None) -%}
+<th>{{ label }}
+{%- if sort == key and dir == 'asc' %} <a class="sort-arrow sorting" href="{{ url_for(endpoint, sort=key, dir='desc', q=q) }}">&#9650;</a>
+{%- elif sort == key and dir == 'desc' %} <a class="sort-arrow sorting" href="{{ url_for(endpoint, sort=key, dir='asc', q=q) }}">&#9660;</a>
+{%- else %} <a class="sort-arrow" href="{{ url_for(endpoint, sort=key, dir='asc', q=q) }}">&#9660;</a>
+{%- endif -%}
+</th>
+{%- endmacro %}

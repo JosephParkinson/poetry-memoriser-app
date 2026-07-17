@@ -1,16 +1,17 @@
 {% extends "base.html" %}
-{% block title %}Archive — The Poetry House{% endblock %}
+{% from "_sort.html" import th %}
+{% block title %}Completed Poems — The Poetry House{% endblock %}
 {% block content %}
 
-<h2>Archive</h2>
+<h2>Completed Poems</h2>
 
 {% if completed %}
 <p>Poems you have recited in full.</p>
 <table>
   <tr>
-    <th>Date</th>
-    <th>Poem</th>
-    <th>Author</th>
+    {{ th('Date', 'date', sort, dir, 'archive') }}
+    {{ th('Poem', 'title', sort, dir, 'archive') }}
+    {{ th('Author', 'author', sort, dir, 'archive') }}
   </tr>
   {% for entry in completed %}
   <tr>
@@ -21,9 +22,9 @@
   {% endfor %}
 </table>
 {% else %}
-<p>Nothing here yet. Complete a recital to add a poem to the archive.</p>
+<p>Nothing here yet. Complete a recital to add a poem here.</p>
 {% endif %}
 
-<p><a href="{{ url_for('interior') }}">Back to my house</a></p>
+<p><a href="{{ url_for('account') }}">Back to my account</a></p>
 
 {% endblock %}

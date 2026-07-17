@@ -43,6 +43,55 @@ h3 {
     margin: 1em 0 0.4em 0;
 }
 
+/* ---- home page: centred search ---- */
+
+.centered {
+    text-align: center;
+}
+
+input.search-box {
+    width: 18em;
+}
+
+/* ---- sortable table headers ----
+   the arrow shows the column's sort direction; underline marks the column
+   the table is currently sorted by. */
+
+a.sort-arrow {
+    text-decoration: none;
+}
+
+a.sort-arrow.sorting {
+    text-decoration: underline;
+}
+
+/* ---- favourite star (poem page, top right) ----
+   sits inside the h2, floated right, so it shares the title's line. */
+
+.fav-star {
+    float: right;
+    margin: 0;
+    font-size: 1.3em;
+}
+
+.fav-star button {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: 1;
+    color: #d8d8d8;
+}
+
+/* ---- learn page: stage buttons ---- */
+
+.stage-row button.current {
+    background: #222222;
+    border-style: inset;
+}
+
 /* ---- site header ---- */
 
 .site-title {

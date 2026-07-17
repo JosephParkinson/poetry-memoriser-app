@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ poem.title }} — The Poetry House{% endblock %}
+{% block content %}
+
+<h2>
+{%- if session.user_id -%}
+<form method="POST" class="fav-star"
+      action="{{ url_for('remove_from_notebook' if in_notebook else 'copy_to_notebook', poem_id=poem.id) }}">
+  <input type="hidden" name="next" value="{{ url_for('library_poem', poem_id=poem.id) }}">
+  {% if in_notebook %}
+  <button type="submit" title="Remove from favourites">&#9733;</button>
+  {% else %}
+  <button type="submit" title="Add to favourites">&#9734;</button>
+  {% endif %}
+</form>
+{%- endif -%}
+{{ poem.title }}</h2>
+{% if poem.author_name %}<p class="byline">by {{ poem.author_name }}{% if poem.year_written %} ({{ poem.year_written }}){% endif %}</p>{% endif %}
+
+<div class="poem">{{ poem.body }}</div>
+
+<p><a href="{{ url_for('learn_stanzas', poem_id=poem.id) }}">Learn poem</a></p>
+
+<p><a href="{{ url_for('library') }}">Back to all poems</a></p>
+
+{% endblock %}

@@ -1,28 +1,29 @@
 {% extends "base.html" %}
-{% block title %}Notebook — The Poetry House{% endblock %}
+{% from "_sort.html" import th %}
+{% block title %}Favourites — The Poetry House{% endblock %}
 {% block content %}
 
-<h2>Notebook</h2>
+<h2>Favourites</h2>
 
 {% if entries %}
 <table>
   <tr>
-    <th>Poem</th>
-    <th>Author</th>
-    <th>Year</th>
-    <th>Lines</th>
-    <th>Status</th>
+    {{ th('Poem', 'title', sort, dir, 'notebook') }}
+    {{ th('Author', 'author', sort, dir, 'notebook') }}
+    {{ th('Year', 'year', sort, dir, 'notebook') }}
+    {{ th('Lines', 'lines', sort, dir, 'notebook') }}
+    {{ th('Status', 'status', sort, dir, 'notebook') }}
     <th></th>
   </tr>
   {% for e in entries %}
   <tr>
-    <td><a href="{{ url_for('notebook_poem', poem_id=e.id) }}">{{ e.title }}</a></td>
+    <td><a href="{{ url_for('library_poem', poem_id=e.id) }}">{{ e.title }}</a></td>
     <td>{{ e.author_name or '' }}</td>
     <td>{{ e.year_written or '' }}</td>
     <td>{{ e.line_count }}</td>
     <td>{% if e.status == 'notebook' %}not started{% else %}{{ e.status }}{% endif %}{% if e.current_learning_mode %} ({{ stage_labels.get(e.current_learning_mode, e.current_learning_mode) }}){% endif %}</td>
     <td>
-      <a href="{{ url_for('learn', poem_id=e.id) }}">Learn</a>
+      <a href="{{ url_for('learn_stanzas', poem_id=e.id) }}">Learn</a>
       {% if e.status in ('learning', 'completed') %}
       | <a href="{{ url_for('recital', poem_id=e.id) }}">Recite</a>
       {% endif %}
@@ -31,12 +32,12 @@
   {% endfor %}
 </table>
 {% else %}
-<p>Your notebook is empty. Browse a book on
-<a href="{{ url_for('home_shelf') }}">your shelf</a> and copy poems here.</p>
+<p>You have no favourites yet. Browse <a href="{{ url_for('library') }}">All Poems</a>
+and add poems here.</p>
 {% endif %}
 
 <p><a href="{{ url_for('add_poem') }}">Add your own poem</a></p>
 
-<p><a href="{{ url_for('interior') }}">Back to my house</a></p>
+<p><a href="{{ url_for('account') }}">Back to my account</a></p>
 
 {% endblock %}
