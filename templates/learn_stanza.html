@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Stanza {{ label }}: {{ poem.title }}{% endblock %}
+{% block title %}{{ title }}: {{ poem.title }}{% endblock %}
 {% block content %}
 
-<h2>Stanza {{ label }} of {{ total }}</h2>
+<h2>{{ title }} ({{ label }} of {{ total }})</h2>
 <p class="byline">{{ poem.title }}{% if poem.author_name %}, by {{ poem.author_name }}{% endif %}</p>
 
 {% for lv in levels %}
@@ -21,10 +21,10 @@
 {% endfor %}
 
 <form id="done-form" method="POST" style="display:none">
-  <button type="submit" id="done-btn">Stanza {{ label }} learned</button>
+  <button type="submit" id="done-btn">{{ title }} learned</button>
 </form>
 
-<p><a href="{{ url_for('learn_stanzas', poem_id=poem.id) }}">Back to the stanza list</a></p>
+<p><a href="{{ url_for('learn_stanzas', poem_id=poem.id) }}">Back to the parts list</a></p>
 
 <script>
 (function() {

@@ -8,7 +8,8 @@
 {% endif %}
 
 <p>Press Start and recite the poem aloud. Press Stop when you have finished;
-your recitation is then marked against the text.</p>
+your recitation is then marked against the text. Near misses are accepted
+("o'er" heard as "over" still counts).</p>
 
 <p>
   <button type="button" id="start-btn">Start</button>
@@ -32,6 +33,150 @@ your recitation is then marked against the text.</p>
 <p><a href="{{ url_for('recital', poem_id=poem.id) }}">Back to the recital</a></p>
 
 <script>
+// ---- matching helpers (no DOM; testable on their own) ----
+
+// lowercase, keep letters and internal apostrophes, split into words
+function normalize(text) {
+  return text.toLowerCase()
+    .replace(/[^a-z']+/g, ' ')
+    .split(' ')
+    .map(function(w) { return w.replace(/^'+|'+$/g, ''); })
+    .filter(Boolean);
+}
+
+function deapos(w) { return w.replace(/'/g, ''); }
+
+// how the recognizer tends to hear common archaic words
+var ALIASES = {
+  "o'er": ['over', 'or', 'oar'],
+  "e'er": ['ever', 'air'],
+  "ne'er": ['never'],
+  "'tis": ['tis', "it's"],
+  "'twas": ['twas'],
+  'thou': ['though'],
+  'thee': ['the'],
+  'thy': ['the', 'thigh'],
+  'ye': ['you'],
+  'hath': ['has', 'hat'],
+  'doth': ['does', 'dot'],
+  'dost': ['does', 'dust'],
+  'art': ['are'],
+  'wast': ['was'],
+  'wert': ['were'],
+  'wilt': ['will'],
+  'shalt': ['shall'],
+  'canst': ['can'],
+  'oft': ['often'],
+  'ere': ['air', 'err', 'are']
+};
+
+function makePoemWord(word) {
+  var base = deapos(word);
+  var variants = [word, base];
+  (ALIASES[word] || []).forEach(function(v) { variants.push(v); });
+  // elided past tense: wander'd -> wandered
+  if (word.slice(-2) === "'d") variants.push(base.slice(0, -1) + 'ed');
+  return { word: word, base: base, variants: variants, hit: false };
+}
+
+function editDistance(a, b) {
+  if (Math.abs(a.length - b.length) > 2) return 3;
+  var prev = [], cur, i, j;
+  for (j = 0; j <= b.length; j++) prev[j] = j;
+  for (i = 1; i <= a.length; i++) {
+    cur = [i];
+    for (j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1,
+                        prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    prev = cur;
+  }
+  return prev[b.length];
+}
+
+// spelling slack allowed for a word of this length
+function tolerance(len) {
+  if (len >= 8) return 2;
+  if (len >= 5) return 1;
+  return 0;
+}
+
+function soundex(w) {
+  var codes = { b: 1, f: 1, p: 1, v: 1, c: 2, g: 2, j: 2, k: 2, q: 2,
+                s: 2, x: 2, z: 2, d: 3, t: 3, l: 4, m: 5, n: 5, r: 6 };
+  var out = w[0];
+  var last = codes[w[0]] || 0;
+  for (var i = 1; i < w.length && out.length < 4; i++) {
+    var c = codes[w[i]] || 0;
+    if (c && c !== last) out += c;
+    if (w[i] !== 'h' && w[i] !== 'w') last = c;
+  }
+  while (out.length < 4) out += '0';
+  return out;
+}
+
+function wordMatches(pw, heardWord) {
+  if (pw.variants.indexOf(heardWord) !== -1) return true;
+  var hb = deapos(heardWord);
+  if (pw.variants.indexOf(hb) !== -1) return true;
+  var t = tolerance(Math.max(pw.base.length, hb.length));
+  if (t > 0 && editDistance(pw.base, hb) <= t) return true;
+  if (pw.base.length >= 4 && hb.length >= 4 &&
+      pw.base[0] === hb[0] &&
+      Math.abs(pw.base.length - hb.length) <= 2 &&
+      soundex(pw.base) === soundex(hb)) return true;
+  return false;
+}
+
+// e.g. poem "'twas" vs heard "it was", or poem "do not" vs heard "don't"
+function concatMatches(a, b) {
+  return editDistance(a, b) <= 1;
+}
+
+// align heard words with poem words (longest common subsequence, with
+// forgiving matches and 1-to-2 word joins); sets .hit on matched poem
+// words and returns how many were matched
+function markWords(poemWords, said) {
+  var saidBase = said.map(deapos);
+  var m = poemWords.length, n = said.length;
+  var W = n + 1;
+  var dp = new Uint16Array((m + 1) * (n + 1));
+  var i, j;
+  for (i = m - 1; i >= 0; i--) {
+    for (j = n - 1; j >= 0; j--) {
+      var best = Math.max(dp[(i + 1) * W + j], dp[i * W + j + 1]);
+      if (wordMatches(poemWords[i], said[j]))
+        best = Math.max(best, dp[(i + 1) * W + j + 1] + 1);
+      if (j + 1 < n && concatMatches(poemWords[i].base, saidBase[j] + saidBase[j + 1]))
+        best = Math.max(best, dp[(i + 1) * W + j + 2] + 1);
+      if (i + 1 < m && concatMatches(poemWords[i].base + poemWords[i + 1].base, saidBase[j]))
+        best = Math.max(best, dp[(i + 2) * W + j + 1] + 2);
+      dp[i * W + j] = best;
+    }
+  }
+  var matched = 0;
+  i = 0; j = 0;
+  while (i < m && j < n) {
+    var cur = dp[i * W + j];
+    if (wordMatches(poemWords[i], said[j]) && dp[(i + 1) * W + j + 1] + 1 === cur) {
+      poemWords[i].hit = true; matched++; i++; j++;
+    } else if (j + 1 < n && concatMatches(poemWords[i].base, saidBase[j] + saidBase[j + 1]) &&
+               dp[(i + 1) * W + j + 2] + 1 === cur) {
+      poemWords[i].hit = true; matched++; i++; j += 2;
+    } else if (i + 1 < m && concatMatches(poemWords[i].base + poemWords[i + 1].base, saidBase[j]) &&
+               dp[(i + 2) * W + j + 1] + 2 === cur) {
+      poemWords[i].hit = true; poemWords[i + 1].hit = true;
+      matched += 2; i += 2; j++;
+    } else if (dp[(i + 1) * W + j] === cur) {
+      i++;
+    } else {
+      j++;
+    }
+  }
+  return matched;
+}
+
+// ---- page wiring ----
 (function() {
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   var startBtn = document.getElementById('start-btn');
@@ -44,22 +189,15 @@ your recitation is then marked against the text.</p>
     return;
   }
 
-  // lowercase, keep letters and internal apostrophes, split into words
-  function normalize(text) {
-    return text.toLowerCase()
-      .replace(/[^a-z']+/g, ' ')
-      .split(' ')
-      .map(function(w) { return w.replace(/^'+|'+$/g, ''); })
-      .filter(Boolean);
-  }
-
   // one entry per markable word, in poem order (a hyphenated display word
   // can contribute more than one)
   var spans = Array.from(document.querySelectorAll('.say-word'));
   var poemWords = [];
   spans.forEach(function(span) {
     normalize(span.textContent).forEach(function(w) {
-      poemWords.push({ span: span, word: w, hit: false });
+      var pw = makePoemWord(w);
+      pw.span = span;
+      poemWords.push(pw);
     });
   });
 
@@ -98,7 +236,7 @@ your recitation is then marked against the text.</p>
     // the browser stops listening after a silence; restart until Stop is pressed
     rec.onend = function() {
       if (recording) rec.start();
-      else mark();
+      else showResult();
     };
     rec.start();
   });
@@ -109,39 +247,16 @@ your recitation is then marked against the text.</p>
     rec.stop();
   });
 
-  // align the heard words with the poem (longest common subsequence),
-  // then mark every poem word that was not matched
-  function mark() {
+  function showResult() {
     startBtn.disabled = false;
-    var said = normalize(heard);
-    var m = poemWords.length, n = said.length;
-    var W = n + 1;
-    var dp = new Uint16Array((m + 1) * (n + 1));
-    for (var i = m - 1; i >= 0; i--) {
-      for (var j = n - 1; j >= 0; j--) {
-        dp[i * W + j] = poemWords[i].word === said[j]
-          ? dp[(i + 1) * W + j + 1] + 1
-          : Math.max(dp[(i + 1) * W + j], dp[i * W + j + 1]);
-      }
-    }
-    var matched = 0, i2 = 0, j2 = 0;
-    while (i2 < m && j2 < n) {
-      if (poemWords[i2].word === said[j2]) {
-        poemWords[i2].hit = true;
-        matched++; i2++; j2++;
-      } else if (dp[(i2 + 1) * W + j2] >= dp[i2 * W + j2 + 1]) {
-        i2++;
-      } else {
-        j2++;
-      }
-    }
+    var matched = markWords(poemWords, normalize(heard));
     poemWords.forEach(function(pw) {
       if (!pw.hit) pw.span.classList.add('word-missed');
     });
-
-    var pct = m ? Math.round(matched / m * 100) : 0;
+    var total = poemWords.length;
+    var pct = total ? Math.round(matched / total * 100) : 0;
     document.getElementById('score').textContent =
-      matched + ' / ' + m + ' words (' + pct + '%).';
+      matched + ' / ' + total + ' words (' + pct + '%).';
     document.getElementById('transcript').textContent = heard.trim() || '(nothing)';
     document.getElementById('result').style.display = 'block';
     status.textContent = '';

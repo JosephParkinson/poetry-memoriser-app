@@ -243,27 +243,33 @@ def learn_stanzas(poem_id):
         return redirect(url_for("notebook"))
 
     db.set_learning_mode(user_id, poem_id, "stanzas")
-    stanzas = db.split_stanzas(poem["body"])
-    learned = db.get_stanza_progress(user_id, poem_id)
+    chunks = db.split_chunks(poem["body"])
+    learned = {i for i in db.get_stanza_progress(user_id, poem_id)
+               if i < len(chunks)}
 
     steps = []
-    for i, stanza in enumerate(stanzas):
+    for i, chunk in enumerate(chunks):
         steps.append({
             "index": i,
             "label": i + 1,
-            "preview": stanza.split("\n", 1)[0],
+            "title": chunk["title"],
+            "preview": chunk["text"].split("\n", 1)[0],
             "learned": i in learned,
         })
-    next_index = next((i for i in range(len(stanzas)) if i not in learned), None)
+    next_index = next((i for i in range(len(chunks)) if i not in learned), None)
+
+    just_learned = request.args.get("learned", type=int)
+    if just_learned is not None and not (0 <= just_learned < len(chunks)):
+        just_learned = None
 
     return render_template(
         "learn_stanzas.html",
         poem=poem,
         steps=steps,
-        total=len(stanzas),
+        total=len(chunks),
         learned_count=len(learned),
         next_index=next_index,
-        just_learned=request.args.get("learned", type=int),
+        just_learned=just_learned,
     )
 
 
@@ -277,23 +283,24 @@ def learn_stanza(poem_id, idx):
     if not db.get_user_poem(user_id, poem_id):
         return redirect(url_for("notebook"))
 
-    stanzas = db.split_stanzas(poem["body"])
-    if idx < 0 or idx >= len(stanzas):
+    chunks = db.split_chunks(poem["body"])
+    if idx < 0 or idx >= len(chunks):
         return redirect(url_for("learn_stanzas", poem_id=poem_id))
 
     if request.method == "POST":
-        # client has confirmed the whole stanza was recited correctly
+        # client has confirmed the whole part was recited correctly
         db.mark_stanza_learned(user_id, poem_id, idx)
         return redirect(url_for("learn_stanzas", poem_id=poem_id, learned=idx))
 
-    stanza = stanzas[idx]
+    chunk = chunks[idx]
     return render_template(
         "learn_stanza.html",
         poem=poem,
         idx=idx,
         label=idx + 1,
-        total=len(stanzas),
-        levels=db.prepare_stanza_levels(stanza, seed=idx),
+        total=len(chunks),
+        title=chunk["title"],
+        levels=db.prepare_stanza_levels(chunk["text"], seed=idx),
     )
 
 

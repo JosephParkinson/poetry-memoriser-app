@@ -6,8 +6,9 @@ Working notes for this repo. See the memory index for stack/architecture details
 
 The look (since the db-implementation branch): a plain, classic, pre-2005 website —
 think Wikipedia or the Stanford Encyclopedia of Philosophy, but dark: near-black
-background (#181818), light grey serif text (Georgia/Times), plain underlined
-light-blue links, plain lists, tables, and forms.
+background (#181818), light grey serif text (Georgia/Times), plain lists, tables,
+and forms. Links are the same colour as body text, indicated by underline only —
+no blue, no visited colour.
 The house/rooms structure (library, bookshelf, notebook, recital room) stays.
 
 Hard rules — the user will be very upset if these are broken:
