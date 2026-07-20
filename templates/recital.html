@@ -6,16 +6,15 @@
 <p class="byline">by {{ poem.author_name }}</p>
 {% endif %}
 
-<p>
-  <label>
-    <input type="checkbox" id="hide-underlines" /> Hide underlines
-  </label>
-</p>
-
-<p>
-  <a href="{{ url_for('recital_aloud', poem_id=poem.id) }}"
-    >Recite aloud instead</a
-  >
+<p class="stage-row">
+  <button type="button">Read</button>
+  <button type="button">10%</button>
+  <button type="button">25%</button>
+  <button type="button">50%</button>
+  <button type="button">75%</button>
+  <button type="button">100%</button>
+  <button type="button">Flow</button>
+  <button type="button">Recite</button>
 </p>
 
 <input
@@ -28,115 +27,30 @@
   spellcheck="false"
 />
 
-<div class="poem-fill" id="poem-fill">
-  {%- for tok in tokens -%} {%- if tok.type == 'space' -%}{{ ' ' }}{%- elif
-  tok.type == 'newline' -%}<br />{%- elif tok.type == 'blank' -%}<span
-    class="blank-slot"
-    data-word="{{ tok.word }}"
-    >{{ tok.word }}</span
-  >{%- endif -%} {%- endfor -%}
+<div class="poem-fill" id="poem">
+  {%- for tok in tokens -%} {%- if tok.type == 'lettered' -%}<span class="w"
+    >{{ tok.text }}</span
+  >{%- elif tok.type == 'word' -%}{{ tok.text }}{%- elif tok.type == 'space'
+  -%}{{ ' ' }}{%- elif tok.type == 'newline' -%}<br />{%- endif -%} {%- endfor
+  -%}
 </div>
 
+<p id="controls" style="display: none">
+  <button type="button" id="retry-btn">Retry</button>
+  <button type="button" id="next-btn">Next</button>
+</p>
+
 <form id="done-form" method="POST" style="display: none">
-  <button type="submit" id="done-btn">Recital complete</button>
+  <button type="submit">Recital complete</button>
 </form>
+
+<p>
+  <a href="{{ url_for('recital_aloud', poem_id=poem.id) }}"
+    >Recite aloud instead</a
+  >
+</p>
 
 <p><a href="{{ url_for('learn_stanzas', poem_id=poem.id) }}">Back to learning</a></p>
 
-<script>
-  (function () {
-    var blanks = Array.from(document.querySelectorAll(".blank-slot"));
-    var keyInput = document.getElementById("key-catcher");
-    var cur = 0;
-    var wrong = 0;
-
-    document
-      .getElementById("hide-underlines")
-      .addEventListener("change", function () {
-        document
-          .getElementById("poem-fill")
-          .classList.toggle("no-underlines", this.checked);
-      });
-
-    function firstAlpha(word) {
-      var m = word.match(/[a-zA-Z]/);
-      return m ? m[0].toLowerCase() : null;
-    }
-
-    function activate(idx) {
-      blanks.forEach(function (b) {
-        b.classList.remove("active");
-      });
-      if (idx < blanks.length) {
-        wrong = 0;
-        blanks[idx].classList.add("active");
-        blanks[idx].scrollIntoView({ block: "nearest" });
-      } else {
-        keyInput.blur();
-        document.getElementById("done-form").style.display = "block";
-        document.getElementById("done-btn").focus();
-      }
-    }
-
-    function handleChar(ch) {
-      if (cur >= blanks.length) return;
-
-      var blank = blanks[cur];
-      var expected = firstAlpha(blank.dataset.word);
-      if (!expected) {
-        cur++;
-        activate(cur);
-        return;
-      }
-
-      if (ch.toLowerCase() === expected) {
-        blank.classList.remove("active", "flash-wrong");
-        blank.classList.add("filled");
-        cur++;
-        activate(cur);
-      } else {
-        wrong++;
-        clearTimeout(blank.wrongTimer);
-        blank.classList.add("flash-wrong");
-        blank.wrongTimer = setTimeout(function () {
-          blank.classList.remove("flash-wrong");
-        }, 300);
-        if (wrong >= 3) {
-          // 3 wrong tries: fill it in and move on so the user can't get stuck
-          blank.classList.remove("active", "flash-wrong");
-          blank.classList.add("revealed");
-          cur++;
-          activate(cur);
-        }
-      }
-    }
-
-    document.addEventListener("keydown", function (e) {
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-      if (e.key.length !== 1) return;
-      if (cur >= blanks.length) return;
-      handleChar(e.key);
-      e.preventDefault();
-    });
-
-    // mobile soft keyboards type into the invisible input instead of firing
-    // usable keydown events. Desktop keydown preventDefaults before the
-    // character reaches the input, so each keystroke is handled exactly once.
-    keyInput.addEventListener("input", function () {
-      var v = this.value;
-      this.value = "";
-      if (v) handleChar(v.charAt(v.length - 1));
-    });
-
-    // tapping the poem opens (or reopens) the keyboard on mobile
-    document
-      .getElementById("poem-fill")
-      .addEventListener("click", function () {
-        if (cur < blanks.length) keyInput.focus();
-      });
-
-    activate(0);
-    keyInput.focus();
-  })();
-</script>
+<script src="{{ url_for('static', filename='stage_drill.js') }}"></script>
 {% endblock %}

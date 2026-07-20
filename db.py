@@ -262,24 +262,6 @@ STAGE_LABELS = {
 }
 
 
-def prepare_recital_tokens(body):
-    """Every word in the poem becomes a blank (for recital mode)."""
-    text = body.replace("\r\n", "\n").replace("\r", "\n")
-    result = []
-    for line in text.split("\n"):
-        if result:
-            result.append({"type": "newline"})
-        words = line.split(" ")
-        first = True
-        for word in words:
-            if word:
-                if not first:
-                    result.append({"type": "space"})
-                result.append({"type": "blank", "word": word})
-                first = False
-    return result
-
-
 # ── learn in parts ────────────────────────────────────────────────────────────
 
 def split_stanzas(body):
@@ -351,10 +333,11 @@ def tokenize_stanza(stanza):
     newline); order is the list of word indices that are eligible to be blanked
     (words containing a letter). Punctuation-only tokens are always shown.
     """
+    text = stanza.replace("\r\n", "\n").replace("\r", "\n")
     tokens = []
     order = []
     widx = 0
-    for li, line in enumerate(stanza.split("\n")):
+    for li, line in enumerate(text.split("\n")):
         if li > 0:
             tokens.append({"type": "newline"})
         first = True

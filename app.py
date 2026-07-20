@@ -292,7 +292,7 @@ def recital(poem_id):
         db.save_recital_attempt(user_id, poem_id, "", 1.0, True)
         return redirect(url_for("archive"))
 
-    tokens = db.prepare_recital_tokens(poem["body"])
+    tokens, order = db.tokenize_stanza(poem["body"])
     return render_template("recital.html", poem=poem, tokens=tokens)
 
 
