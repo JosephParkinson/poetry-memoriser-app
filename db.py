@@ -264,8 +264,9 @@ STAGE_LABELS = {
 
 def prepare_recital_tokens(body):
     """Every word in the poem becomes a blank (for recital mode)."""
+    text = body.replace("\r\n", "\n").replace("\r", "\n")
     result = []
-    for line in body.split("\n"):
+    for line in text.split("\n"):
         if result:
             result.append({"type": "newline"})
         words = line.split(" ")

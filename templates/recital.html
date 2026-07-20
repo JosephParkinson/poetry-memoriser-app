@@ -48,6 +48,7 @@
     var blanks = Array.from(document.querySelectorAll(".blank-slot"));
     var keyInput = document.getElementById("key-catcher");
     var cur = 0;
+    var wrong = 0;
 
     document
       .getElementById("hide-underlines")
@@ -67,6 +68,7 @@
         b.classList.remove("active");
       });
       if (idx < blanks.length) {
+        wrong = 0;
         blanks[idx].classList.add("active");
         blanks[idx].scrollIntoView({ block: "nearest" });
       } else {
@@ -93,11 +95,19 @@
         cur++;
         activate(cur);
       } else {
+        wrong++;
         clearTimeout(blank.wrongTimer);
         blank.classList.add("flash-wrong");
         blank.wrongTimer = setTimeout(function () {
           blank.classList.remove("flash-wrong");
         }, 300);
+        if (wrong >= 3) {
+          // 3 wrong tries: fill it in and move on so the user can't get stuck
+          blank.classList.remove("active", "flash-wrong");
+          blank.classList.add("revealed");
+          cur++;
+          activate(cur);
+        }
       }
     }
 
